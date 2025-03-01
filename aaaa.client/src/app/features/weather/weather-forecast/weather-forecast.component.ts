@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { NavigationComponent } from "./navigation/navigation.component";
 
 interface WeatherForecast {
   date: string;
@@ -11,12 +10,12 @@ interface WeatherForecast {
 }
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
-  imports: [CommonModule, NavigationComponent]
+  selector: 'app-weather-forecast',
+  imports: [CommonModule],
+  templateUrl: './weather-forecast.component.html',
+  styleUrl: './weather-forecast.component.scss'
 })
-export class AppComponent implements OnInit {
+export class WeatherForecastComponent implements OnInit {
   public forecasts: WeatherForecast[] = [];
 
   constructor(private http: HttpClient) { }
