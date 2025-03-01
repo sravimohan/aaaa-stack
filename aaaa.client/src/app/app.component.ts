@@ -35,5 +35,5 @@ export class AppComponent implements OnInit {
     });
   }
 
-  title = 'angularandaspnetcoretemplate.client';
+  title = 'aaaa.client';
 }

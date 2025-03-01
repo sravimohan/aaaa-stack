@@ -1,4 +1,4 @@
-namespace AngularAndASPNETCoreTemplate.Server
+namespace AAAA.Server
 {
     public class WeatherForecast
     {
