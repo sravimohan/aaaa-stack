@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AAAA.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize(Policy = "AuthZPolicy")]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries = new[]

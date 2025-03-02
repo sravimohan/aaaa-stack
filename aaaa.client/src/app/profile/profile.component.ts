@@ -21,7 +21,7 @@ export class ProfileComponent implements OnInit {
   constructor(private http: HttpClient) { }
 
   ngOnInit() {
-    this.getProfile(environment.apiConfig.uri);
+    this.getProfile(environment.graphApiConfig.uri);
   }
 
   getProfile(url: string) {

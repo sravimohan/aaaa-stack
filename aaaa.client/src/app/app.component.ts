@@ -34,7 +34,8 @@ import { NavigationComponent } from "./navigation/navigation.component";
     RouterLink,
     MatToolbarModule,
     MatButtonModule,
-    MatMenuModule
+    MatMenuModule,
+    NavigationComponent
 ]
 })
 export class AppComponent implements OnInit, OnDestroy {
