@@ -13,12 +13,12 @@ interface WeatherForecast {
   selector: 'app-weather-forecast',
   imports: [CommonModule],
   templateUrl: './weather-forecast.component.html',
-  styleUrl: './weather-forecast.component.scss'
+  styleUrl: './weather-forecast.component.scss',
 })
 export class WeatherForecastComponent implements OnInit {
   public forecasts: WeatherForecast[] = [];
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.getForecasts();
@@ -31,7 +31,7 @@ export class WeatherForecastComponent implements OnInit {
       },
       error: (error) => {
         console.error(error);
-      }
+      },
     });
   }
 

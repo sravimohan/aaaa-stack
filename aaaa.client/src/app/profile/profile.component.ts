@@ -2,23 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
 
-
-type ProfileType = {
+interface ProfileType {
   givenName?: string;
   surname?: string;
   userPrincipalName?: string;
   id?: string;
-};
+}
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
-  styleUrls: [],
+  styleUrl: './profile.component.scss',
 })
 export class ProfileComponent implements OnInit {
   profile: ProfileType | undefined;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.getProfile(environment.graphApiConfig.uri);

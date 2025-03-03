@@ -5,10 +5,7 @@ import {
   BrowserCacheLocation,
   LogLevel,
 } from '@azure/msal-browser';
-import {
-  MsalInterceptorConfiguration,
-  MsalGuardConfiguration,
-} from '@azure/msal-angular';
+import { MsalInterceptorConfiguration, MsalGuardConfiguration } from '@azure/msal-angular';
 import { environment } from '../app/environments/environment';
 
 export function loggerCallback(logLevel: LogLevel, message: string) {
@@ -38,17 +35,11 @@ export function MSALInstanceFactory(): IPublicClientApplication {
 }
 
 export function MSALInterceptorConfigFactory(): MsalInterceptorConfiguration {
-  const protectedResourceMap = new Map<string, Array<string>>();
+  const protectedResourceMap = new Map<string, string[]>();
 
-  protectedResourceMap.set(
-    environment.graphApiConfig.uri,
-    environment.graphApiConfig.scopes
-  );
+  protectedResourceMap.set(environment.graphApiConfig.uri, environment.graphApiConfig.scopes);
 
-  protectedResourceMap.set(
-    environment.weatherApiConfig.uri,
-    environment.weatherApiConfig.scopes
-  );
+  protectedResourceMap.set(environment.weatherApiConfig.uri, environment.weatherApiConfig.scopes);
 
   return {
     interactionType: InteractionType.Redirect,

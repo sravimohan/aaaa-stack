@@ -5,7 +5,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { MsalGuard } from '@azure/msal-angular';
 
 export const routes: Routes = [
-    { path: 'profile', component: ProfileComponent, canActivate: [MsalGuard], },
-    { path: 'dashboard', component: DashboardComponent, canActivate: [MsalGuard] },
-    { path: 'weather-forecast', component: WeatherForecastComponent, canActivate: [MsalGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [MsalGuard] },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [MsalGuard] },
+  { path: 'weather-forecast', component: WeatherForecastComponent, canActivate: [MsalGuard] },
 ];

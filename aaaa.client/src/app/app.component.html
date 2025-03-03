@@ -1,31 +1,34 @@
-﻿<mat-toolbar color="primary">
-    <a class="title" href="/">{{ title }}</a>
+﻿<div class="container">
+  <mat-toolbar class="toolbar" color="primary">
+    <h3 class="title">{{ title }}</h3>
 
     <div class="toolbar-spacer"></div>
 
-    <a mat-button [routerLink]="['profile']">Profile</a>
+    <div>
+      @if (!loginDisplay) {
+        <a mat-menu [matMenuTriggerFor]="loginMenu">Login</a>
+        <mat-menu #loginMenu="matMenu">
+          <button mat-menu-item (click)="loginRedirect()">Login using Redirect</button>
+          <button mat-menu-item (click)="loginPopup()">Login using Popup</button>
+        </mat-menu>
+      } @else {
+        <a mat-button [routerLink]="['/dashboard']">Dashboard</a>
+        <a mat-button [routerLink]="['/weather-forecast']">Weather Forecast</a>
+        <a mat-button [routerLink]="['profile']">Profile</a>
+        <a mat-button [matMenuTriggerFor]="logoutMenu">Logout</a>
 
-    @if (!loginDisplay) {
-    <button mat-raised-button [matMenuTriggerFor]="loginMenu">Login</button>
-    }
-    <mat-menu #loginMenu="matMenu">
-        <button mat-menu-item (click)="loginRedirect()">Login using Redirect</button>
-        <button mat-menu-item (click)="loginPopup()">Login using Popup</button>
-    </mat-menu>
+        <mat-menu #logoutMenu="matMenu">
+          <button mat-menu-item (click)="logout()">Logout using Redirect</button>
+          <button mat-menu-item (click)="logout(true)">Logout using Popup</button>
+        </mat-menu>
+      }
+    </div>
+  </mat-toolbar>
 
-    @if (loginDisplay) {
-    <button mat-raised-button [matMenuTriggerFor]="logoutMenu">Logout</button>
-    }
-    <mat-menu #logoutMenu="matMenu">
-        <button mat-menu-item (click)="logout()">Logout using Redirect</button>
-        <button mat-menu-item (click)="logout(true)">Logout using Popup</button>
-    </mat-menu>
-
-</mat-toolbar>
-<div class="container">
-    <!--This is to avoid reload during acquireTokenSilent() because of hidden iframe -->
+  <!--This is to avoid reload during acquireTokenSilent() because of hidden iframe -->
+  <div class="content">
     @if (!isIframe) {
-    <router-outlet></router-outlet>
+      <router-outlet></router-outlet>
     }
-    <app-navigation></app-navigation>
+  </div>
 </div>

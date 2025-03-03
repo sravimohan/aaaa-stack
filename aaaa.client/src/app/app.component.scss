@@ -1,0 +1,20 @@
+.container {
+  display: flex;
+  justify-content: start;
+  flex-direction: column;
+
+  .title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .content {
+    padding: 30px;
+  }
+}

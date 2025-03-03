@@ -21,25 +21,15 @@ import {
 } from '@azure/msal-browser';
 import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
-import { NavigationComponent } from "./navigation/navigation.component";
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-  imports: [
-    CommonModule,
-    MsalModule,
-    RouterOutlet,
-    RouterLink,
-    MatToolbarModule,
-    MatButtonModule,
-    MatMenuModule,
-    NavigationComponent
-]
+  styleUrls: ['./app.component.scss'],
+  imports: [CommonModule, MsalModule, RouterOutlet, RouterLink, MatToolbarModule, MatButtonModule, MatMenuModule],
 })
 export class AppComponent implements OnInit, OnDestroy {
-  title = 'Angular Standalone Sample - MSAL Angular';
+  title = 'Angular and ASP.NET MSAL Sample';
   isIframe = false;
   loginDisplay = false;
   private readonly _destroying$ = new Subject<void>();
@@ -47,8 +37,8 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     @Inject(MSAL_GUARD_CONFIG) private msalGuardConfig: MsalGuardConfiguration,
     private authService: MsalService,
-    private msalBroadcastService: MsalBroadcastService
-  ) { }
+    private msalBroadcastService: MsalBroadcastService,
+  ) {}
 
   ngOnInit(): void {
     this.authService.handleRedirectObservable().subscribe();
@@ -60,11 +50,11 @@ export class AppComponent implements OnInit, OnDestroy {
       .pipe(
         filter(
           (msg: EventMessage) =>
-            msg.eventType === EventType.ACCOUNT_ADDED ||
-            msg.eventType === EventType.ACCOUNT_REMOVED
-        )
+            msg.eventType === EventType.ACCOUNT_ADDED || msg.eventType === EventType.ACCOUNT_REMOVED,
+        ),
       )
       .subscribe((result: EventMessage) => {
+        console.debug('Event Message', result);
         if (this.authService.instance.getAllAccounts().length === 0) {
           window.location.pathname = '/';
         } else {
@@ -74,10 +64,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.msalBroadcastService.inProgress$
       .pipe(
-        filter(
-          (status: InteractionStatus) => status === InteractionStatus.None
-        ),
-        takeUntil(this._destroying$)
+        filter((status: InteractionStatus) => status === InteractionStatus.None),
+        takeUntil(this._destroying$),
       )
       .subscribe(() => {
         this.setLoginDisplay();
@@ -95,13 +83,10 @@ export class AppComponent implements OnInit, OnDestroy {
      * To use active account set here, subscribe to inProgress$ first in your component
      * Note: Basic usage demonstrated. Your app may require more complicated account selection logic
      */
-    let activeAccount = this.authService.instance.getActiveAccount();
+    const activeAccount = this.authService.instance.getActiveAccount();
 
-    if (
-      !activeAccount &&
-      this.authService.instance.getAllAccounts().length > 0
-    ) {
-      let accounts = this.authService.instance.getAllAccounts();
+    if (!activeAccount && this.authService.instance.getAllAccounts().length > 0) {
+      const accounts = this.authService.instance.getAllAccounts();
       this.authService.instance.setActiveAccount(accounts[0]);
     }
   }
@@ -124,11 +109,9 @@ export class AppComponent implements OnInit, OnDestroy {
           this.authService.instance.setActiveAccount(response.account);
         });
     } else {
-      this.authService
-        .loginPopup()
-        .subscribe((response: AuthenticationResult) => {
-          this.authService.instance.setActiveAccount(response.account);
-        });
+      this.authService.loginPopup().subscribe((response: AuthenticationResult) => {
+        this.authService.instance.setActiveAccount(response.account);
+      });
     }
   }
 
