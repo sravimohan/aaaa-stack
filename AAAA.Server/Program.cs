@@ -12,7 +12,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(config =>
 {
     config.AddPolicy("AuthZPolicy", policyBuilder =>
-        policyBuilder.Requirements.Add(new ScopeAuthorizationRequirement() { RequiredScopesConfigurationKey = $"AzureAd:Scopes" }));
+        policyBuilder.Requirements.Add(new ScopeAuthorizationRequirement { RequiredScopesConfigurationKey = $"AzureAd:Scopes" }));
+
+    config.AddPolicy("ManagerPolicy", policyBuilder =>
+        policyBuilder.RequireRole("roles", "manager"));
 });
 
 // Add services to the container.
@@ -42,3 +45,5 @@ app.MapControllers();
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
+

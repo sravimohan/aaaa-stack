@@ -15,13 +15,20 @@
 ## Steps for setting up Azure AD
 
 - create api app
+
   - expose and api, add scope, Forecast.Read
   - enterprise applications, client, Permissions, Grant admin consent for org
 
 - create client app
+
   - SPA with redirect url
   - api permissions, request api permission, choosee api app and persmission
   - enterprise applications, api, Permissions, Grant admin consent for org
 
 - In client app
   - api permissions, add a permission, select api app and scope
+
+## Microsoft Training SC-300: Implement Access Management for Apps Implement app registration
+
+- <https://learn.microsoft.com/en-us/training/modules/implement-app-registration/1-introduction>
+- <https://learn.microsoft.com/en-us/aspnet/core/security/authorization/roles?view=aspnetcore-9.0>
