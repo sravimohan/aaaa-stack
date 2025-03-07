@@ -1,0 +1,11 @@
+title: AAAA Stack
+description: Sample stack using Angular, ASP.NET, AWS and Azure AD
+author: "Ravi Mohan"
+
+mermaid: true
+
+github:
+  public: true
+  is_project_page: true
+  repository_url: https://github.com/sravimohan/aaaa-stack
+  owner_url: https://github.com/sravimohan
