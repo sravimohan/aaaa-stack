@@ -24,6 +24,9 @@ graph TD
     ASPNet --> AzureAD
 ```
 
+## Get Started
+To get started with the AAAA Stack, follow the instructions in the [Getting Started Guide](doc/GettingStarted.md).
+
 ## Technology Overview
 
 - **Angular**: A front-end framework by Google for building dynamic single-page applications (SPAs) with features like two-way data binding and dependency injection.
