@@ -9,3 +9,13 @@ github:
   is_project_page: true
   repository_url: https://github.com/sravimohan/aaaa-stack
   owner_url: https://github.com/sravimohan
+
+header_links:
+  - title: "Front End"
+    url: "/aaaa.client"
+  - title: "Back End"
+    url: "/AAAA.Server"
+  - title: "Azure AD"
+    url: "/"
+  - title: "AWS"
+    url: "/"
