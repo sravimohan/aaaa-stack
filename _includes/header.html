@@ -1,0 +1,29 @@
+<header class="site-header">
+
+    <div class="wrapper">
+      {%- assign default_paths = site.pages | map: "path" -%}
+      {%- assign page_paths = site.header_pages | default: default_paths -%}
+      {%- assign titles_size = site.pages | map: 'title' | join: '' | size -%}
+      <a class="site-title" rel="author" href="{{ "/" | relative_url }}">{{ site.title | escape }}</a>
+  
+      {%- if titles_size > 0 -%}
+      <nav class="site-nav">
+
+  
+        <div class="trigger">
+          {%- for link in site.header_links -%}
+          {%- assign my_link = link -%}
+          {%- if my_link.path -%}
+          <a class="page-link" href="{{ my_link.path | relative_url }}">{{ my_link.title | escape }}</a>
+          {%- elsif my_link.button -%}
+          <a class="button-link" href="{{ my_link.button | relative_url }}">{{ my_link.title | escape }}</a>
+          {%- elsif my_link.link -%}
+          <a class="page-link" href="{{ my_link.link | absolute_url }}">{{ my_link.title | escape }}</a>
+          {%- endif -%}
+          {%- endfor -%}
+        </div>
+  
+      </nav>
+      {%- endif -%}
+    </div>
+  </header>
