@@ -2,6 +2,8 @@ title: AAAA Stack
 description: Sample stack using Angular, ASP.NET, AWS and Azure AD
 author: "Ravi Mohan"
 
+theme: jekyll-theme-minimal
+
 mermaid: true
 
 github:
