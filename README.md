@@ -25,6 +25,7 @@ graph TD
 ```
 
 ## Get Started
+
 To get started with the AAAA Stack, follow the instructions in the [Getting Started Guide](doc/GettingStarted.md).
 
 ## Technology Overview
@@ -59,7 +60,7 @@ By leveraging GitHub Actions, you can ensure a consistent and reliable process f
 
 ### Why the name 'AAAA'?
 
-It's an acronym for Angular, ASP.Net, AWS, and Azure AD.  We will also use A4 interchangeably. Also, I couldn't find a better name, so here we are!
+It's an acronym for Angular, ASP.Net, AWS, and Azure AD. We will also use A4 interchangeably. Also, I couldn't find a better name, so here we are!
 
 ### Where is the Database?
 
