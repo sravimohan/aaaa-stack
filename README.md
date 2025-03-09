@@ -26,7 +26,7 @@ graph TD
 
 ## Get Started
 
-To get started with the AAAA Stack, follow the instructions in the [Getting Started Guide](doc/GettingStarted.md).
+To get started with the AAAA Stack, follow the instructions in the [Getting Started Guide](doc/getting-started.md).
 
 ## Technology Overview
 
