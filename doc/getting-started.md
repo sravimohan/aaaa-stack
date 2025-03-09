@@ -22,7 +22,7 @@ For detailed instructions, please refer to the [Angular Front-End instructions](
 
 The back-end of this sample is built using ASP.NET Web API. It is configured to work with Azure AD for authentication and authorization.
 
-For detailed instructions, please refer to the [ASP.NET Web API Back-End instructions](../aaaa.server/README.md).
+For detailed instructions, please refer to the [ASP.NET Web API Back-End instructions](../AAAA.Server/README.md).
 
 ## Build
 
