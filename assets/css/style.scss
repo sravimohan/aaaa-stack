@@ -1,0 +1,43 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+
+a {
+    font-weight: normal;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    font-weight: normal;
+    text-decoration: underline;
+}
+
+
+.logo {
+    width: 90px;
+    height: 90px;
+}
+
+.github-logo {
+    margin: 30px 0;
+    padding: 10px 50px;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-top: 40px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    align-items: start;
+    padding: 20px 20px;
+
+    li {
+        list-style-type: none;
+    }
+}

@@ -1,6 +1,10 @@
 title: AAAA Stack
-description: Sample stack using Angular, ASP.NET, AWS and Azure AD
+description: Angular, ASP.NET, AWS and Azure AD
 author: "Ravi Mohan"
+
+theme: jekyll-theme-minimal
+show_downloads: false
+logo: /assets/images/logo.png
 
 mermaid: true
 
@@ -8,14 +12,5 @@ github:
   public: true
   is_project_page: true
   repository_url: https://github.com/sravimohan/aaaa-stack
+  owner_name: Ravi Mohan
   owner_url: https://github.com/sravimohan
-
-header_links:
-  - title: "Front End"
-    url: "/aaaa.client"
-  - title: "Back End"
-    url: "/AAAA.Server"
-  - title: "Azure AD"
-    url: "/"
-  - title: "AWS"
-    url: "/"
