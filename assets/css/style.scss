@@ -31,8 +31,9 @@ a:hover, a:focus {
     gap: 15px;
     background-color: #f8f9fa;
     border-radius: 5px;
-    margin-top: 40px;
-    padding: 20px;
+    margin-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     align-items: start;
     padding: 20px 20px;
