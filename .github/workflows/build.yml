@@ -38,7 +38,7 @@ jobs:
         run: dotnet test ./AAAA.Server --configuration Release
 
       - name: Build Docker image
-        run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest -f .\AAAA.Server\Dockerfile
+        run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest -f ./AAAA.Server/ .
 
       - name: Tag Docker image
         run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
