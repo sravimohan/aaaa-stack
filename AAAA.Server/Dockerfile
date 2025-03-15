@@ -13,7 +13,7 @@ ARG BUILD_CONFIGURATION=Release
 # Install Node.js 22
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g \
+    && npm install -g npm \
     && npm install -g @angular/cli
 
 WORKDIR /src
