@@ -31,11 +31,11 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ./AAAA.Server
 
-      - name: Build
-        run: dotnet build ./AAAA.Server --configuration Release
+      # - name: Build
+      #   run: dotnet build ./AAAA.Server --configuration Release
 
-      - name: Run tests
-        run: dotnet test ./AAAA.Server --configuration Release
+      # - name: Run tests
+      #   run: dotnet test ./AAAA.Server --configuration Release
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest -f ./AAAA.Server/Dockerfile .

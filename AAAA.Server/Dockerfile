@@ -6,7 +6,6 @@ USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 
-
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -14,7 +13,8 @@ ARG BUILD_CONFIGURATION=Release
 # Install Node.js 22
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g npm
+    && npm install -g \
+    && npm install -g @angular/cli
 
 WORKDIR /src
 COPY ["AAAA.Server/AAAA.Server.csproj", "AAAA.Server/"]
