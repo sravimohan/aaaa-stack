@@ -37,10 +37,6 @@ jobs:
       - name: Run tests
         run: dotnet test ./AAAA.Server --configuration Release
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
       - name: Build Docker image
         run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest .
 
@@ -56,6 +52,10 @@ jobs:
 
       - name: Sts GetCallerIdentity
         run: aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push Docker image to Amazon ECR
         run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
