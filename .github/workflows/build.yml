@@ -37,11 +37,8 @@ jobs:
       # - name: Run tests
       #   run: dotnet test ./AAAA.Server --configuration Release
 
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest -f ./AAAA.Server/Dockerfile .
-
-      - name: Tag Docker image
-        run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+      # - name: Build Docker image
+      #   run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest -f ./AAAA.Server/Dockerfile .
 
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -59,6 +56,9 @@ jobs:
 
       - name: Publish Docker Image to Amazon ECR
         run: dotnet publish -c Release -p:ContainerRepository=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
+
+      # - name: Tag Docker image
+      #   run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest        
 
       - name: Push Docker image to Amazon ECR
         run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
