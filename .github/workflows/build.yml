@@ -31,8 +31,8 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ./AAAA.Server
 
-      # - name: Build
-      #   run: dotnet build ./AAAA.Server --configuration Release
+      - name: Build
+        run: dotnet build ./AAAA.Server --configuration Release
 
       # - name: Run tests
       #   run: dotnet test ./AAAA.Server --configuration Release
@@ -55,8 +55,8 @@ jobs:
       #   id: login-ecr
       #   uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Publish Docker Image to Amazon ECR
-        run: dotnet publish ./AAAA.Server -c Release -p:ContainerRepository=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
+      # - name: Publish Docker Image to Amazon ECR
+      #   run: dotnet publish ./AAAA.Server -c Release -p:ContainerRepository=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
 
       # - name: Tag Docker image
       #   run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest        
