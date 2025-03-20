@@ -4,16 +4,17 @@ on:
   push:
     branches:
       - main
+      - ci
   pull_request:
     branches:
       - main
 
 env:
-  AWS_REGION : "ap-southeast-2" # your aws region
+  AWS_REGION: "ap-southeast-2" # your aws region
 
 permissions:
   id-token: write # required for requesting the JWT
-  contents: read  # required for actions/checkout
+  contents: read # required for actions/checkout
 
 jobs:
   build:
@@ -59,7 +60,7 @@ jobs:
       #   run: dotnet publish ./AAAA.Server -c Release -p:ContainerRepository=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
 
       # - name: Tag Docker image
-      #   run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest        
+      #   run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
       # - name: Push Docker image to Amazon ECR
       #   run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
