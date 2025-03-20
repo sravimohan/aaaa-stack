@@ -32,35 +32,35 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ./AAAA.Server
 
-      - name: Build
-        run: dotnet build ./AAAA.Server --configuration Release
+      # - name: Build
+      #   run: dotnet build ./AAAA.Server --configuration Release
 
       # - name: Run tests
       #   run: dotnet test ./AAAA.Server --configuration Release
 
-      # - name: Build Docker image
-      #   run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest -f ./AAAA.Server/Dockerfile .
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.ECR_REPOSITORY }}:latest -f ./AAAA.Server/Dockerfile .
 
-      # - name: configure aws credentials
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     role-to-assume: arn:aws:iam::258032939606:role/github-actions-role
-      #     role-session-name: GitHub_to_AWS_via_FederatedOIDC
-      #     role-duration-seconds: 3600
-      #     aws-region: ${{ env.AWS_REGION }}
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::258032939606:role/github-actions-role
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          role-duration-seconds: 3600
+          aws-region: ${{ env.AWS_REGION }}
 
-      # - name: Sts GetCallerIdentity
-      #   run: aws sts get-caller-identity
+      - name: Sts GetCallerIdentity
+        run: aws sts get-caller-identity
 
-      # - name: Login to Amazon ECR
-      #   id: login-ecr
-      #   uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      # - name: Publish Docker Image to Amazon ECR
-      #   run: dotnet publish ./AAAA.Server -c Release -p:ContainerRepository=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
+      - name: Publish Docker Image to Amazon ECR
+        run: dotnet publish ./AAAA.Server -c Release -p:ContainerRepository=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
 
-      # - name: Tag Docker image
-      #   run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+      - name: Tag Docker image
+        run: docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
-      # - name: Push Docker image to Amazon ECR
-      #   run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+      - name: Push Docker image to Amazon ECR
+        run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
