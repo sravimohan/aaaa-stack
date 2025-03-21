@@ -18,19 +18,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # - name: Setup .NET 9 SDK
-      #   uses: actions/setup-dotnet@v4
-      #   with:
-      #     dotnet-version: 9.x
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
 
-      # - name: Restore Dependencies
-      #   run: dotnet restore ./AAAA.Server/AAAA.Server.csproj
+      - name: Restore Dependencies
+        run: dotnet restore ./AAAA.Server/AAAA.Server.csproj
 
-      # - name: Build Project
-      #   run: dotnet build ./AAAA.Server/AAAA.Server.csproj --no-restore
+      - name: Build Project
+        run: dotnet build ./AAAA.Server/AAAA.Server.csproj --no-restore
 
-      # - name: Run Tests
-      #   run: dotnet test ./AAAA.Server/AAAA.Server.csproj --no-build --verbosity normal
+      - name: Run Tests
+        run: dotnet test ./AAAA.Server/AAAA.Server.csproj --no-build --verbosity normal
 
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -42,3 +42,9 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Publish Docker Image to Amazon ECR
+        working-directory: ./BookManager/
+        run: |
+          dotnet publish -c Release -p:ContainerRepository=${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
+          docker push ${{ secrets.ECR_REPOSITORY }} --all-tags
