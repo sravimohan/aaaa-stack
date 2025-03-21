@@ -7,6 +7,10 @@ on:
       - main
       - ci
 
+permissions:
+  id-token: write # required for requesting the JWT
+  contents: read # required for actions/checkout
+
 jobs:
   build:
     runs-on: ubuntu-latest
