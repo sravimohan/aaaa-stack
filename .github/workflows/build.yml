@@ -44,7 +44,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Publish Docker Image to Amazon ECR
-        working-directory: ./BookManager/
+        working-directory: ./AAAA.Server/
         run: |
           dotnet publish -c Release -p:ContainerRepository=${{ secrets.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64
           docker push ${{ secrets.ECR_REPOSITORY }} --all-tags
