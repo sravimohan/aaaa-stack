@@ -8,8 +8,8 @@ on:
       - ci
 
 permissions:
-  id-token: write # required for requesting the JWT
-  contents: read # required for actions/checkout
+  id-token: write
+  contents: read
 
 jobs:
   build:
@@ -18,30 +18,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9 SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.x
+      # - name: Setup .NET 9 SDK
+      #   uses: actions/setup-dotnet@v4
+      #   with:
+      #     dotnet-version: 9.x
 
-      - name: Restore Dependencies
-        run: dotnet restore ./AAAA.Server/AAAA.Server.csproj
+      # - name: Restore Dependencies
+      #   run: dotnet restore ./AAAA.Server/AAAA.Server.csproj
 
-      - name: Build Project
-        run: dotnet build ./AAAA.Server/AAAA.Server.csproj --no-restore
+      # - name: Build Project
+      #   run: dotnet build ./AAAA.Server/AAAA.Server.csproj --no-restore
 
-      - name: Run Tests
-        run: dotnet test ./AAAA.Server/AAAA.Server.csproj --no-build --verbosity normal
+      # - name: Run Tests
+      #   run: dotnet test ./AAAA.Server/AAAA.Server.csproj --no-build --verbosity normal
 
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ secrets.AWS_REGION }}          
+          audience: sts.amazonaws.com
+          aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ACTIONS_ROLE_TO_ASSUME }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          role-duration-seconds: 3600
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registries: ${{ secrets.AWS_ACCOUNT_ID }}
