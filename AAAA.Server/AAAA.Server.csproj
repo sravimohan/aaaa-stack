@@ -14,7 +14,6 @@
 
   <PropertyGroup>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <ContainerRepository>a4/a4-web</ContainerRepository>
     <PublishProfile>DefaultContainer</PublishProfile>
   </PropertyGroup>
 
