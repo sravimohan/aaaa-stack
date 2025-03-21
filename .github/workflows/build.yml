@@ -46,6 +46,5 @@ jobs:
       - name: Publish Docker Image to Amazon ECR
         working-directory: ./AAAA.Server/
         run: |
-          GITHASH=$(git rev-parse --short HEAD)
-          dotnet publish -c Release -p:ContainerRepository=${{ secrets.ECR_REPOSITORY }} -p:ContainerImageTags="${GITHASH};latest" -p:RuntimeIdentifier=linux-x64
+          dotnet publish -c Release -p:ContainerRepository=${{ secrets.ECR_REPOSITORY }} -p:ContainerImageTags="${{ github.ref_name }}/github.sha;" -p:RuntimeIdentifier=linux-x64
           docker push ${{ secrets.ECR_REPOSITORY }} --all-tags
