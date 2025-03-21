@@ -14,9 +14,6 @@
 
   <PropertyGroup>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <ContainerImageTags>1.0.0;latest</ContainerImageTags>
-    <ContainerRepository>a4/a4-web</ContainerRepository>
-    <PublishProfile>DefaultContainer</PublishProfile>
   </PropertyGroup>
 
   <ItemGroup>
