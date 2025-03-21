@@ -34,6 +34,7 @@ Resources:
   GitHubActionsOIDCProviderRole:
     Type: AWS::IAM::Role
     Properties:
+      Description: Role for GitHub Actions to assume
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -46,10 +47,13 @@ Resources:
                 token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:ref:*"
               StringEquals:
                 token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
-      Policies:
-        - PolicyName: "ECRPolicy"
-          PolicyDocument:
-            Statement:
-              - Effect: "Allow"
-                Action: "ecr:*"
-                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+
+      # Policies:
+      #   - PolicyName: "ECRPolicy"
+      #     PolicyDocument:
+      #       Statement:
+      #         - Effect: "Allow"
+      #           Action: "ecr:*"
+      #           Resource: "*"
