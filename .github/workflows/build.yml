@@ -55,5 +55,5 @@ jobs:
         env:
           IMAGE_REPOSITORY_URL: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ github.event.repository.name }}"
         run: |
-          dotnet publish -c Release -p:ContainerRepository="${{ IMAGE_REPOSITORY_URL }}" -p:ContainerImageTags="${{ github.ref_name }}-${{github.sha}};" -p:RuntimeIdentifier=linux-x64
-          docker push ${{ IMAGE_REPOSITORY_URL }} --all-tags
+          dotnet publish -c Release -p:ContainerRepository="$IMAGE_REPOSITORY_URL" -p:ContainerImageTags="${{ github.ref_name }}-${{github.sha}};" -p:RuntimeIdentifier=linux-x64
+          docker push $IMAGE_REPOSITORY_URL --all-tags
