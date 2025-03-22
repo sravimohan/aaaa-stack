@@ -1,0 +1,143 @@
+# This CloudFormation template creates an ECR repository and an IAM role for GitHub Actions to assume.
+# The role allows GitHub Actions to push Docker images to the ECR repository.
+# It also sets up an OIDC provider for GitHub Actions to authenticate with AWS using OpenID Connect.
+
+# Sample instructions to run this CloudFormation template using AWS CLI:
+#
+# To create the stack:
+#   aws cloudformation create-stack --stack-name aaaa-github-actions-stack --template-body file://github-actions-infrastructure.yaml --parameters ParameterKey=GitHubOrg,ParameterValue=sravimohan ParameterKey=GitHubRepo,ParameterValue=aaaa-stack --capabilities CAPABILITY_NAMED_IAM
+#
+# To update the stack, use:
+#   aws cloudformation update-stack --stack-name aaaa-github-actions-stack --template-body file://github-actions-infrastructure.yaml --parameters ParameterKey=GitHubOrg,ParameterValue=sravimohan ParameterKey=GitHubRepo,ParameterValue=aaaa-stack --capabilities CAPABILITY_NAMED_IAM
+#
+# To delete the stack, use:
+#   aws cloudformation delete-stack --stack-name aaaa-github-actions-stack
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "ECR and GitHub Actions Permissions for Docker Image Publishing"
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Description: "The GitHub organization"
+  GitHubRepo:
+    Type: String
+    Description: "The GitHub repository, also used as the ECR repository name"
+
+Resources:
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref GitHubRepo
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: IMMUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256
+
+  GitHubActionsOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: "https://token.actions.githubusercontent.com"
+      ClientIdList:
+        - "sts.amazonaws.com"
+
+  BuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${GitHubRepo}-GitHubActions-Build-Role"
+      Description: Build Role for GitHub Actions to assume
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: !Ref GitHubActionsOIDCProvider
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:ref:*"
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+      Policies:
+        - PolicyName: "ECRPolicy"
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - ecr:GetAuthorizationToken
+                Effect: "Allow"
+                Resource: "*"
+              - Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:CompleteLayerUpload
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Effect: "Allow"
+                Resource: !GetAtt ECRRepository.Arn
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${GitHubRepo}-GitHubActions-Deploy-Role"
+      Description: Deploy Role for GitHub Actions to assume
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRoleWithWebIdentity
+            Effect: Allow
+            Principal:
+              Federated: !Ref GitHubActionsOIDCProvider
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:ref:*"
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+      Policies:
+        - PolicyName: ECRPolicy
+          PolicyDocument:
+            Statement:
+              - Action: ecr:GetAuthorizationToken
+                Effect: Allow
+                Resource: "*"
+              - Action:
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchCheckLayerAvailability
+                Effect: Allow
+                Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${GitHubRepo}"
+
+        - PolicyName: "ECSDeployPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:UpdateService
+                  - ecs:DescribeServices
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DescribeTaskDefinition
+                  - ecs:ListTaskDefinitions
+                  - ecs:ListServices
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: "*"
+                Condition:
+                  StringLike:
+                    iam:PassedToService: ecs-tasks.amazonaws.com
+
+Outputs:
+  ECRRepositoryArn:
+    Description: "ARN of the ECR Repository"
+    Value: !GetAtt ECRRepository.Arn
+  GitHubActionsBuildRoleArn:
+    Description: "Build Role ARN used in GitHub Actions Secret, AWS_BUILD_ROLE_ARN_TO_ASSUME"
+    Value: !GetAtt BuildRole.Arn
+  GitHubActionsDeployRoleArn:
+    Description: "Deploy Role ARN used in GitHub Actions Secret, AWS_DEPLOY_ROLE_ARN_TO_ASSUME"
+    Value: !GetAtt DeployRole.Arn
+

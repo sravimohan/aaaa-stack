@@ -50,7 +50,7 @@ To run the GitHub build action, follow these steps:
     - The AWS region where your resources are deployed
     - Example: us-east-1, ap-southeast-2
 
-  - **AWS_ACTIONS_ROLE_ARN_TO_ASSUME**
+  - **AWS_BUILD_ROLE_ARN_TO_ASSUME**
     - The ARN of the GitHub Actions role created in your CloudFormation stack
     - Format: arn:aws:iam::{account-id}:role/{role-name}
     - This value can be found in the CloudFormation stack outputs

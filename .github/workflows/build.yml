@@ -4,7 +4,7 @@
 # Required Secrets:
 # - AWS_ACCOUNT_ID: The AWS account ID where the ECR repository is located.
 # - AWS_REGION: The AWS region where the ECR repository is located (e.g., us-west-2).
-# - AWS_ACTIONS_ROLE_ARN_TO_ASSUME: The ARN of the IAM role to assume for GitHub Actions.
+# - AWS_BUILD_ROLE_ARN_TO_ASSUME: The ARN of the IAM role to assume for GitHub Actions.
 
 name: Build
 
@@ -45,7 +45,7 @@ jobs:
         with:
           role-session-name: GitHubActionsRoleSession
           aws-region: ${{ secrets.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ACTIONS_ROLE_ARN_TO_ASSUME }}
+          role-to-assume: ${{ secrets.AWS_BUILD_ROLE_ARN_TO_ASSUME }}
 
       - name: Login to Amazon ECR
         id: login-ecr
