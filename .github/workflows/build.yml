@@ -1,3 +1,10 @@
+# This GitHub Actions workflow builds and tests the application, then publishes it to an Amazon ECR repository.
+# It is triggered on manual dispatch or when changes are pushed to the configured branches.
+# Required Secrets:
+# - AWS_REGION: The AWS region where the ECR repository is located (e.g., us-west-2).
+# - AWS_ACTIONS_ROLE_TO_ASSUME: The ARN of the IAM role to assume for GitHub Actions.
+# - ECR_REPOSITORY: The URI of the ECR repository (e.g., 999999999999.dkr.ecr.ap-southeast-2.amazonaws.com/aaaa-stack).
+
 name: Build
 
 on:
