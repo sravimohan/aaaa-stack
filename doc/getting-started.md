@@ -26,13 +26,37 @@ For detailed instructions, please refer to the [ASP.NET Web API Back-End instruc
 
 ## Build
 
+### Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- You have an [AWS account](https://aws.amazon.com/).
+- You have a GitHub account.
+- Setup AWS ECR and GitHub Actions permissions to push to the ECR repository. Refer to the [Setting up Build Infrastructure instructions](../.aws/build-infrastructure.md).
+
 To run the GitHub build action, follow these steps:
 
-1. Ensure you have a GitHub Actions workflow file in your repository. The file should be located at `.github/workflows/build.yml`.
+- Ensure you have a GitHub Actions workflow file in your repository. The file should be located at `.github/workflows/build.yml`.
 
-2. Commit and push to your repository.
+- Setup GitHub Actions Secrets
 
-3. The build action will automatically run whenever you push changes to the `main` branch or create a pull request targeting the `main` branch.
+  - **AWS_ACCOUNT_ID**
+
+    - Your 12-digit AWS account number
+    - Used to construct ECR repository URLs
+
+  - **AWS_REGION**
+
+    - The AWS region where your resources are deployed
+    - Example: us-east-1, ap-southeast-2
+
+  - **AWS_ACTIONS_ROLE_ARN_TO_ASSUME**
+    - The ARN of the GitHub Actions role created in your CloudFormation stack
+    - Format: arn:aws:iam::{account-id}:role/{role-name}
+    - This value can be found in the CloudFormation stack outputs
+
+- Commit and push to your repository.
+- The build action will automatically run whenever you push changes to the `main` branch or create a pull request targeting the `main` branch.
 
 You can monitor the progress and results of the build action in the "Actions" tab of your GitHub repository.
 
