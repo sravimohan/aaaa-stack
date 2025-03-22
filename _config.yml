@@ -1,3 +1,7 @@
+# This is the main Jekyll configuration file for the documentation site.
+# It contains settings for the site, including the theme, author information, and GitHub repository details.
+# It also includes settings for plugins like Mermaid for diagrams and charts.
+
 title: AAAA Stack
 description: Angular, ASP.NET, AWS and Azure AD
 author: "Ravi Mohan"
