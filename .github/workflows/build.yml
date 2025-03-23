@@ -32,13 +32,13 @@ jobs:
           dotnet-version: 9.x
 
       - name: Restore Dependencies
-        run: dotnet restore ./AAAA.Server/AAAA.Server.csproj
+        run: dotnet restore ./src/AAAA.Server/AAAA.Server.csproj
 
       - name: Build Project
-        run: dotnet build ./AAAA.Server/AAAA.Server.csproj --no-restore
+        run: dotnet build ./src/AAAA.Server/AAAA.Server.csproj --no-restore
 
       - name: Run Tests
-        run: dotnet test ./AAAA.Server/AAAA.Server.csproj --no-build --verbosity normal
+        run: dotnet test ./src/AAAA.Server/AAAA.Server.csproj --no-build --verbosity normal
 
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -52,7 +52,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Publish Docker Image to Amazon ECR
-        working-directory: ./AAAA.Server/
+        working-directory: ./src/AAAA.Server/
         env:
           # Assuming the ecr name is the same as the github repository name
           # If not, you can set the name of the ecr repository here
