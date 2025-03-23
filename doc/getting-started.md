@@ -32,7 +32,7 @@ Before you begin, ensure you have met the following requirements:
 
 - You have an [AWS account](https://aws.amazon.com/).
 - You have a GitHub account.
-- Setup AWS ECR and GitHub Actions permissions to push to the ECR repository. Refer to the [Setting up Build Infrastructure instructions](../.aws/build-infrastructure.md).
+- Setup AWS ECR and GitHub Actions permissions to push to the ECR repository. Refer to the [Setting up Build Infrastructure instructions](/aws/build-infrastructure.md).
 
 To run the GitHub build action, follow these steps:
 
