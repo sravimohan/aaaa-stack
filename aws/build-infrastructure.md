@@ -21,7 +21,7 @@ This step will need to be done manually by running the `aws cloudformation creat
 The CloudFormation template defines the following key resources:
 
 Cloudformation file:
-[.aws\build-infrastructure.yaml](/.aws\build-infrastructure.yaml)
+[aws\build-infrastructure.yaml](/aws/build-infrastructure.yaml)
 
 #### ECR Repository (AWS::ECR::Repository)
 
