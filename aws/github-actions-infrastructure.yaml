@@ -17,6 +17,9 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "ECR and GitHub Actions Permissions for Docker Image Publishing"
 
 Parameters:
+  GitHubActionsOIDCProviderArn:
+    Type: String
+    Description: "The ARN of the OIDC provider for GitHub Actions to authenticate with AWS"
   GitHubOrg:
     Type: String
     Description: "The GitHub organization"
@@ -28,6 +31,7 @@ Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
     Properties:
+      # The ECR repository name is configured to be the same as the GitHub repository name.
       RepositoryName: !Ref GitHubRepo
       ImageScanningConfiguration:
         ScanOnPush: true
@@ -35,24 +39,17 @@ Resources:
       EncryptionConfiguration:
         EncryptionType: AES256
 
-  GitHubActionsOIDCProvider:
-    Type: AWS::IAM::OIDCProvider
-    Properties:
-      Url: "https://token.actions.githubusercontent.com"
-      ClientIdList:
-        - "sts.amazonaws.com"
-
   BuildRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${GitHubRepo}-GitHubActions-Build-Role"
-      Description: Build Role for GitHub Actions to assume
+      RoleName: !Sub "${GitHubRepo}-gitHub-actions-build-role"
+      Description: "Build Role for GitHub Actions to assume for ${GitHubRepo} repository"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: "Allow"
             Principal:
-              Federated: !Ref GitHubActionsOIDCProvider
+              Federated: !Ref GitHubActionsOIDCProviderArn
             Action: "sts:AssumeRoleWithWebIdentity"
             Condition:
               StringLike:
@@ -81,15 +78,15 @@ Resources:
   DeployRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${GitHubRepo}-GitHubActions-Deploy-Role"
-      Description: Deploy Role for GitHub Actions to assume
+      RoleName: !Sub "${GitHubRepo}-gitHub-actions-deploy-role"
+      Description: "Deploy Role for GitHub Actions to assume for ${GitHubRepo} repository"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Action: sts:AssumeRoleWithWebIdentity
             Effect: Allow
             Principal:
-              Federated: !Ref GitHubActionsOIDCProvider
+              Federated: !Ref GitHubActionsOIDCProviderArn
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:ref:*"
@@ -131,13 +128,12 @@ Resources:
                     iam:PassedToService: ecs-tasks.amazonaws.com
 
 Outputs:
-  ECRRepositoryArn:
-    Description: "ARN of the ECR Repository"
-    Value: !GetAtt ECRRepository.Arn
+  ECRRepositoryUri:
+    Description: "URI of the ECR Repository"
+    Value: !GetAtt ECRRepository.RepositoryUri
   GitHubActionsBuildRoleArn:
     Description: "Build Role ARN used in GitHub Actions Secret, AWS_BUILD_ROLE_ARN_TO_ASSUME"
     Value: !GetAtt BuildRole.Arn
   GitHubActionsDeployRoleArn:
     Description: "Deploy Role ARN used in GitHub Actions Secret, AWS_DEPLOY_ROLE_ARN_TO_ASSUME"
     Value: !GetAtt DeployRole.Arn
-

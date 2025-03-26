@@ -1,10 +1,9 @@
 # This GitHub Actions workflow builds and tests the application, then publishes it to an Amazon ECR repository.
 # It is triggered on manual dispatch or when changes are pushed to the configured branches.
-#
 # Required Secrets:
-# - AWS_ACCOUNT_ID: The AWS account ID where the ECR repository is located.
-# - AWS_REGION: The AWS region where the ECR repository is located (e.g., us-west-2).
+# - AWS_REGION: AWS region where the ECR repository is located (e.g., us-west-2).
 # - AWS_BUILD_ROLE_ARN_TO_ASSUME: The ARN of the IAM role to assume for GitHub Actions.
+# - AWS_ECR_REPOSITORY_URI: The URI of the ECR repository (e.g., 999999999999.dkr.ecr.ap-southeast-2.amazonaws.com/aaaa-stack).
 
 name: Build
 
@@ -53,10 +52,6 @@ jobs:
 
       - name: Publish Docker Image to Amazon ECR
         working-directory: ./src/AAAA.Server/
-        env:
-          # Assuming the ecr name is the same as the github repository name
-          # If not, you can set the name of the ecr repository here
-          IMAGE_REPOSITORY_URL: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ github.event.repository.name }}"
         run: |
-          dotnet publish -c Release -p:ContainerRepository="$IMAGE_REPOSITORY_URL" -p:ContainerImageTags="${{ github.ref_name }}-${{github.sha}};" -p:RuntimeIdentifier=linux-x64
-          docker push $IMAGE_REPOSITORY_URL --all-tags
+          dotnet publish -c Release -p:ContainerRepository="${{ secrets.AWS_ECR_REPOSITORY_URI }}" -p:ContainerImageTags="${{ github.ref_name }}-${{github.sha}};" -p:RuntimeIdentifier=linux-x64
+          docker push ${{ secrets.AWS_ECR_REPOSITORY_URI }} --all-tags
