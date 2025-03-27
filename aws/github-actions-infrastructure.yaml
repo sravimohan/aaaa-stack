@@ -120,6 +120,7 @@ Resources:
                   - ecs:ListServices
                   - ec2:DescribeAvailabilityZones
                   - ssm:GetParameter
+                  - cloudformation:DescribeStacks
                 Resource: "*"
               - Effect: Allow
                 Action:

@@ -7,7 +7,7 @@ export class AppCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const ecrRepositoryUri = process.env.ECR_REPOSITORY_URI;
+    const ecrRepositoryUri = `${process.env.ECR_REPOSITORY_URI}:${process.env.IMAGE_TAG}`;
     if (!ecrRepositoryUri) {
       throw new Error('ECR_REPOSITORY_URI environment variable is not defined');
     }
