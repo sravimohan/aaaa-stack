@@ -9,6 +9,9 @@ name: Deploy
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - deploy
 
 permissions:
   id-token: write
