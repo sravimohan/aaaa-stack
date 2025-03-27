@@ -46,7 +46,7 @@ jobs:
         working-directory: ./aws/app-cdk
         run: |
           npm ci
-          npm run cdk deploy -- --require-approval never
+          npm run cdk deploy -r ${{ secrets.AWS_DEPLOY_ROLE_ARN_TO_ASSUME }} -- --require-approval never
         env:
           # environment variables needed for CDK deployment
           CDK_STACK_NAME: "${{ github.ref_name }}-dev"
