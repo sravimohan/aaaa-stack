@@ -118,6 +118,8 @@ Resources:
                   - ecs:DescribeTaskDefinition
                   - ecs:ListTaskDefinitions
                   - ecs:ListServices
+                  - ec2:DescribeAvailabilityZones
+                  - ssm:GetParameter
                 Resource: "*"
               - Effect: Allow
                 Action:

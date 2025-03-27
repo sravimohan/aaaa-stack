@@ -46,6 +46,7 @@ jobs:
         working-directory: ./aws/app-cdk
         run: |
           npm ci
+          npm run cdk bootstrap
           npm run cdk deploy --all -- --require-approval never
         env:
           # environment variables needed for CDK deployment
