@@ -36,6 +36,11 @@ export class AppCdkStack extends cdk.Stack {
       environment: {
         ASPNETCORE_HTTP_PORTS: '80',
       },
+      portMappings: [
+        {
+          containerPort: 80,
+        },
+      ],
     });
 
     new ecsp.ApplicationLoadBalancedFargateService(this, 'MyWebServer', {
