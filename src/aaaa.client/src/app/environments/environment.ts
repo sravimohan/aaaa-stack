@@ -12,6 +12,6 @@ export const environment = {
   },
   weatherApiConfig: {
     scopes: ['api://355beb58-8fa3-44ba-a691-0296f1dd0c60/Forecast.Read'], // need the fully qulified scope for getting permissions to the secondary app in azure ad
-    uri: 'https://localhost:50466',
+    uri: 'https://a4.roonga.com.au',
   },
 };
