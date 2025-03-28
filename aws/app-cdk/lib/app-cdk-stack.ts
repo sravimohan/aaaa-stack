@@ -34,11 +34,11 @@ export class AppCdkStack extends cdk.Stack {
     taskDefinition.addContainer('AppContainer', {
       image: ecs.ContainerImage.fromRegistry(ecrRepositoryUri),
       environment: {
-        ASPNETCORE_HTTP_PORTS: '80',
+        ASPNETCORE_HTTP_PORTS: '8080',
       },
       portMappings: [
         {
-          containerPort: 80,
+          containerPort: 8080,
         },
       ],
     });
