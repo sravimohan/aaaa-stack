@@ -120,15 +120,12 @@ Resources:
                   - ecs:ListServices
                   - ec2:DescribeAvailabilityZones
                   - ssm:GetParameter
-                  - cloudformation:DescribeStacks
+                  - s3:*
+                  - cloudformation:*                  
                 Resource: "*"
-              - Effect: Allow
-                Action:
-                  - iam:PassRole
-                Resource: "*"
-                Condition:
-                  StringLike:
-                    iam:PassedToService: ecs-tasks.amazonaws.com
+              - Effect: "Allow"
+                Action: "iam:PassRole"
+                Resource: "arn:aws:iam::***:role/cdk-*"
 
 Outputs:
   ECRRepositoryUri:
