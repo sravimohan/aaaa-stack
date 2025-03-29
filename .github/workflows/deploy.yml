@@ -9,9 +9,11 @@ name: Deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - deploy
+    inputs:
+      imageTag:
+        description: "Image tag to deploy"
+        required: false
+        default: "${{ github.ref_name }}-${{ github.sha }}"
 
 permissions:
   id-token: write
@@ -43,12 +45,11 @@ jobs:
         run: |
           npm ci
           npm run cdk synth
-          npm run cdk deploy --all -- --require-approval never
+          npm run cdk deploy --all -- --require-approval never --parameters \
+            AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
+            EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
+            ImageTag="${{ github.event.inputs.imageTag }}" \
         env:
           # environment variables needed for CDK deployment
-          CDK_STACK_NAME: "${{ github.ref_name }}-dev"
           CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
           CDK_DEFAULT_REGION: "${{ secrets.AWS_REGION }}"
-          # IMAGE_TAG: "${{ github.ref_name }}-${{ github.sha }}"
-          IMAGE_TAG: "main-5590113d775a5ab2a910f473e1d6a82fc3fcd64b"
-          ECR_REPOSITORY_URI: "${{ secrets.AWS_ECR_REPOSITORY_URI }}"

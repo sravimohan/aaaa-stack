@@ -123,6 +123,9 @@ Resources:
                 Effect: Allow
                 Resource: arn:aws:s3:::cdk-*
 Outputs:
+  ECRRepositoryArn:
+    Description: "ARN of the ECR Repository"
+    Value: !GetAtt ECRRepository.Arn
   ECRRepositoryUri:
     Description: "URI of the ECR Repository"
     Value: !GetAtt ECRRepository.RepositoryUri

@@ -1,0 +1,644 @@
+Parameters:
+  AcmCertificateArn:
+    Type: String
+    Default: ""
+    Description: ARN of the ACM certificate to use for HTTPS
+  EcrRepositoryArn:
+    Type: String
+    Description: ARN of the ECR repository to pull the image from
+  ImageTag:
+    Type: String
+    Description: Tag of the Docker image to deploy
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+Resources:
+  TaskExecutionRole250D2532:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: aaa-stack/TaskExecutionRole/Resource
+  TaskExecutionRoleDefaultPolicyA84DD1B0:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - ecr:BatchGetImage
+              - ecr:GetAuthorizationToken
+              - ecr:GetDownloadUrlForLayer
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:BatchGetImage
+              - ecr:GetDownloadUrlForLayer
+            Effect: Allow
+            Resource:
+              Ref: EcrRepositoryArn
+        Version: "2012-10-17"
+      PolicyName: TaskExecutionRoleDefaultPolicyA84DD1B0
+      Roles:
+        - Ref: TaskExecutionRole250D2532
+    Metadata:
+      aws:cdk:path: aaa-stack/TaskExecutionRole/DefaultPolicy/Resource
+  TaskDefTaskRole1EDB4A67:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: aaa-stack/TaskDef/TaskRole/Resource
+  TaskDef54694570:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Environment:
+            - Name: ASPNETCORE_HTTP_PORTS
+              Value: "8080"
+          Essential: true
+          Image:
+            Fn::Join:
+              - ""
+              - - Fn::Select:
+                    - 4
+                    - Fn::Split:
+                        - ":"
+                        - Ref: EcrRepositoryArn
+                - .dkr.ecr.
+                - Fn::Select:
+                    - 3
+                    - Fn::Split:
+                        - ":"
+                        - Ref: EcrRepositoryArn
+                - "."
+                - Ref: AWS::URLSuffix
+                - /
+                - Ref: EcrRepositoryArn
+                - ":"
+                - Ref: ImageTag
+          Name: AppContainer
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+      Cpu: "256"
+      ExecutionRoleArn:
+        Fn::GetAtt:
+          - TaskExecutionRole250D2532
+          - Arn
+      Family: aaastackTaskDef36A29D8E
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn:
+        Fn::GetAtt:
+          - TaskDefTaskRole1EDB4A67
+          - Arn
+    Metadata:
+      aws:cdk:path: aaa-stack/TaskDef/Resource
+  aaastackwebserverLB2F1D682E:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: "false"
+      Scheme: internet-facing
+      SecurityGroups:
+        - Fn::GetAtt:
+            - aaastackwebserverLBSecurityGroup1BF9968E
+            - GroupId
+      Subnets:
+        - Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1Subnet3C273B99
+        - Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2Subnet95FF715A
+      Type: application
+    DependsOn:
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1DefaultRouteFF4E2178
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1RouteTableAssociation8B583A17
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2DefaultRouteB1375520
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2RouteTableAssociation43E5803C
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/LB/Resource
+  aaastackwebserverLBSecurityGroup1BF9968E:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Automatically created Security Group for ELB aaastackaaastackwebserverLB25A77496
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow from anyone on port 443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+        - CidrIp: 0.0.0.0/0
+          Description: Allow from anyone on port 80
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/LB/SecurityGroup/Resource
+  aaastackwebserverLBSecurityGrouptoaaastackaaastackwebserverServiceSecurityGroupB97BDAB4808094F49660:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: Load balancer to target
+      DestinationSecurityGroupId:
+        Fn::GetAtt:
+          - aaastackwebserverServiceSecurityGroup42975343
+          - GroupId
+      FromPort: 8080
+      GroupId:
+        Fn::GetAtt:
+          - aaastackwebserverLBSecurityGroup1BF9968E
+          - GroupId
+      IpProtocol: tcp
+      ToPort: 8080
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/LB/SecurityGroup/to aaastackaaastackwebserverServiceSecurityGroupB97BDAB4:8080
+  aaastackwebserverLBPublicListenerA46F248E:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn:
+            Ref: AcmCertificateArn
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: aaastackwebserverLBPublicListenerECSGroupFD1F33BA
+          Type: forward
+      LoadBalancerArn:
+        Ref: aaastackwebserverLB2F1D682E
+      Port: 443
+      Protocol: HTTPS
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/LB/PublicListener/Resource
+  aaastackwebserverLBPublicListenerECSGroupFD1F33BA:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 80
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: "false"
+      TargetType: ip
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/LB/PublicListener/ECSGroup/Resource
+  aaastackwebserverLBPublicRedirectListener111DD276:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - RedirectConfig:
+            Port: "443"
+            Protocol: HTTPS
+            StatusCode: HTTP_301
+          Type: redirect
+      LoadBalancerArn:
+        Ref: aaastackwebserverLB2F1D682E
+      Port: 80
+      Protocol: HTTP
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/LB/PublicRedirectListener/Resource
+  aaastackwebserverService279E249E:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster:
+        Ref: EcsDefaultClusterMnL3mNNYN926A5246
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      EnableECSManagedTags: false
+      HealthCheckGracePeriodSeconds: 60
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: AppContainer
+          ContainerPort: 8080
+          TargetGroupArn:
+            Ref: aaastackwebserverLBPublicListenerECSGroupFD1F33BA
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - Fn::GetAtt:
+                - aaastackwebserverServiceSecurityGroup42975343
+                - GroupId
+          Subnets:
+            - Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1Subnet075EFF4C
+            - Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2SubnetE4CEDF73
+      TaskDefinition:
+        Ref: TaskDef54694570
+    DependsOn:
+      - aaastackwebserverLBPublicListenerECSGroupFD1F33BA
+      - aaastackwebserverLBPublicListenerA46F248E
+      - TaskDefTaskRole1EDB4A67
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/Service/Service
+  aaastackwebserverServiceSecurityGroup42975343:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: aaa-stack/aaa-stack-web-server/Service/SecurityGroup
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    DependsOn:
+      - TaskDefTaskRole1EDB4A67
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/Service/SecurityGroup/Resource
+  aaastackwebserverServiceSecurityGroupfromaaastackaaastackwebserverLBSecurityGroupA0A5CBD580806A795640:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Load balancer to target
+      FromPort: 8080
+      GroupId:
+        Fn::GetAtt:
+          - aaastackwebserverServiceSecurityGroup42975343
+          - GroupId
+      IpProtocol: tcp
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - aaastackwebserverLBSecurityGroup1BF9968E
+          - GroupId
+      ToPort: 8080
+    DependsOn:
+      - TaskDefTaskRole1EDB4A67
+    Metadata:
+      aws:cdk:path: aaa-stack/aaa-stack-web-server/Service/SecurityGroup/from aaastackaaastackwebserverLBSecurityGroupA0A5CBD5:8080
+  EcsDefaultClusterMnL3mNNYN926A5246:
+    Type: AWS::ECS::Cluster
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Resource
+  EcsDefaultClusterMnL3mNNYNVpc7788A521:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/Resource
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1Subnet3C273B99:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-southeast-2a
+      CidrBlock: 10.0.0.0/18
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1/Subnet
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1RouteTableA1FD6ACC:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1/RouteTable
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1RouteTableAssociation8B583A17:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1RouteTableA1FD6ACC
+      SubnetId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1Subnet3C273B99
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1/RouteTableAssociation
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1DefaultRouteFF4E2178:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcIGW9C2C2B8F
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1RouteTableA1FD6ACC
+    DependsOn:
+      - EcsDefaultClusterMnL3mNNYNVpcVPCGW2447264E
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1/DefaultRoute
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1EIP8704DB2F:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1/EIP
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1NATGateway5E3732C1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1EIP8704DB2F
+          - AllocationId
+      SubnetId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1Subnet3C273B99
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1
+    DependsOn:
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1DefaultRouteFF4E2178
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1RouteTableAssociation8B583A17
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet1/NATGateway
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2Subnet95FF715A:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-southeast-2b
+      CidrBlock: 10.0.64.0/18
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2/Subnet
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2RouteTable263DEAA5:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2/RouteTable
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2RouteTableAssociation43E5803C:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2RouteTable263DEAA5
+      SubnetId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2Subnet95FF715A
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2/RouteTableAssociation
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2DefaultRouteB1375520:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcIGW9C2C2B8F
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2RouteTable263DEAA5
+    DependsOn:
+      - EcsDefaultClusterMnL3mNNYNVpcVPCGW2447264E
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2/DefaultRoute
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2EIPF0764873:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2/EIP
+  EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2NATGateway4C855E00:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2EIPF0764873
+          - AllocationId
+      SubnetId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2Subnet95FF715A
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2
+    DependsOn:
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2DefaultRouteB1375520
+      - EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2RouteTableAssociation43E5803C
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PublicSubnet2/NATGateway
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1Subnet075EFF4C:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-southeast-2a
+      CidrBlock: 10.0.128.0/18
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Private
+        - Key: aws-cdk:subnet-type
+          Value: Private
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet1
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet1/Subnet
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1RouteTable4F1D2E36:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet1
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet1/RouteTable
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1RouteTableAssociation34B92275:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1RouteTable4F1D2E36
+      SubnetId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1Subnet075EFF4C
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet1/RouteTableAssociation
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1DefaultRouteA5ADF694:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet1NATGateway5E3732C1
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet1RouteTable4F1D2E36
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet1/DefaultRoute
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2SubnetE4CEDF73:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-southeast-2b
+      CidrBlock: 10.0.192.0/18
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Private
+        - Key: aws-cdk:subnet-type
+          Value: Private
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet2
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet2/Subnet
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2RouteTableDCE46591:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet2
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet2/RouteTable
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2RouteTableAssociation111C622F:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2RouteTableDCE46591
+      SubnetId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2SubnetE4CEDF73
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet2/RouteTableAssociation
+  EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2DefaultRoute20CE2D89:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPublicSubnet2NATGateway4C855E00
+      RouteTableId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcPrivateSubnet2RouteTableDCE46591
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/PrivateSubnet2/DefaultRoute
+  EcsDefaultClusterMnL3mNNYNVpcIGW9C2C2B8F:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/IGW
+  EcsDefaultClusterMnL3mNNYNVpcVPCGW2447264E:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpcIGW9C2C2B8F
+      VpcId:
+        Ref: EcsDefaultClusterMnL3mNNYNVpc7788A521
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/VPCGW
+  EcsDefaultClusterMnL3mNNYNVpcRestrictDefaultSecurityGroupCustomResource93A9A76E:
+    Type: Custom::VpcRestrictDefaultSG
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E
+          - Arn
+      DefaultSecurityGroupId:
+        Fn::GetAtt:
+          - EcsDefaultClusterMnL3mNNYNVpc7788A521
+          - DefaultSecurityGroup
+      Account: "258032939606"
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: aaa-stack/EcsDefaultClusterMnL3mNNYN/Vpc/RestrictDefaultSecurityGroupCustomResource/Default
+  CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+      ManagedPolicyArns:
+        - Fn::Sub: arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: Inline
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:AuthorizeSecurityGroupEgress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:RevokeSecurityGroupEgress
+                Resource:
+                  - Fn::Join:
+                      - ""
+                      - - arn:aws:ec2:ap-southeast-2:258032939606:security-group/
+                        - Fn::GetAtt:
+                            - EcsDefaultClusterMnL3mNNYNVpc7788A521
+                            - DefaultSecurityGroup
+    Metadata:
+      aws:cdk:path: aaa-stack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role
+  CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-258032939606-ap-southeast-2
+        S3Key: 7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip
+      Timeout: 900
+      MemorySize: 128
+      Handler: __entrypoint__.handler
+      Role:
+        Fn::GetAtt:
+          - CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0
+          - Arn
+      Runtime: nodejs20.x
+      Description: Lambda function for removing all inbound/outbound rules from the VPC default security group
+    DependsOn:
+      - CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0
+    Metadata:
+      aws:cdk:path: aaa-stack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler
+      aws:asset:path: asset.7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200
+      aws:asset:property: Code
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/31RwW7bMAz9lt4drfEOO6dpVwQYWsMucg1omfHYyJIhUg4CI/8+SE7dtCt64uN7TyKll6vlr58qv4EjL3RzWBiq1VgJ6EO23tsCPHQo6DM48m4k6NRYOoNRS7VwhvQpWRM6Z6hZjb/BtyD4Any4xz1ZEnI2uj4zzgqQRX/FXc5W6AfSadIMTeC4y3pvLzCO86rE3jGJ86c7YIwb7HoQQW9ZrfrekIZ48x8HzR0YsBqbT0PQAAtp46Cpk4NsO+Rq/Pp02uBDf+0jFrQXzxu+0l/AtyiP3oV++pC5jY/J1VihDp7kNFu+Jx5aj8z/0Rs78dteR21brLMi1IZ0FWqLkvwzKl2IYdVTsBP/zq2YnSZ4izAJETxsilieQB5B8AinrPA0xF+dL97YmALOhmmTS7cSAf23Qyvnc1Yiu+CnvJ+D9EGydWBx3bXwjj9IhXcDNehT+itmlEqgJdueM+saVK/8Y8hztVyq25tXJlr4YIU6VOVU/wEEEEzcBAMAAA==
+    Metadata:
+      aws:cdk:path: aaa-stack/CDKMetadata/Default
+Outputs:
+  aaastackwebserverLoadBalancerDNSF572C472:
+    Value:
+      Fn::GetAtt:
+        - aaastackwebserverLB2F1D682E
+        - DNSName
+  aaastackwebserverServiceURLBA2D6D01:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Fn::GetAtt:
+              - aaastackwebserverLB2F1D682E
+              - DNSName
+
