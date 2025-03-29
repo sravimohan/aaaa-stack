@@ -13,7 +13,7 @@ on:
       imageTag:
         description: "Image tag to deploy"
         required: false
-        default: "${{ github.ref_name }}-${{ github.sha }}"
+        default: ""
   push:
     branches:
       - ci
