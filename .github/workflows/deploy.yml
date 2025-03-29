@@ -51,7 +51,6 @@ jobs:
         working-directory: ./aws/app-cdk
         run: |
           npm ci
-          cdk bootstrap
           cdk deploy --all --require-approval never \
             --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
             --parameters EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
