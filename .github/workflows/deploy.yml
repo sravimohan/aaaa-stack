@@ -49,9 +49,9 @@ jobs:
           npm ci
           npm run cdk synth
           npm run cdk deploy --all -- --require-approval never -- --parameters \
-            aaa-stack:AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
-            aaa-stack:EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
-            aaa-stack:ImageTag="${{ github.event.inputs.imageTag }}" \
+            AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
+            EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
+            ImageTag="${{ github.event.inputs.imageTag }}" \
         env:
           # environment variables needed for CDK deployment
           CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
