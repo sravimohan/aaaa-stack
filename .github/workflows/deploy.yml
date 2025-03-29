@@ -42,16 +42,18 @@ jobs:
         with:
           node-version: "22"
 
+      # Install AWS CDK
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
       # Deploy with AWS CDK
       - name: Deploy with AWS CDK
         working-directory: ./aws/app-cdk
         run: |
-          npm ci
-          npm run cdk synth
-          npm run cdk deploy --all -- --require-approval never -- --parameters \
+          cdk deploy --all --require-approval never --parameters \
             AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
             EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
-            ImageTag="${{ github.event.inputs.imageTag }}" \
+            ImageTag="${{ github.event.inputs.imageTag }}"
         env:
           # environment variables needed for CDK deployment
           CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
