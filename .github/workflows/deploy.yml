@@ -48,7 +48,7 @@ jobs:
         run: |
           npm ci
           npm run cdk synth
-          npm run cdk deploy --all -- --require-approval never --parameters \
+          npm run cdk deploy --all -- --require-approval never -- --parameters \
             aaa-stack:AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
             aaa-stack:EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
             aaa-stack:ImageTag="${{ github.event.inputs.imageTag }}" \
