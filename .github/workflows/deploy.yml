@@ -38,53 +38,49 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN_TO_ASSUME }}
 
+      # Set the image tag to use (input parameter or default to branch name + commit SHA)
+      - name: Set ECR Image Tag to be used
+        id: ecr-image-tag-step
+        run: |
+          if [ -z "${{ github.event.inputs.ecrImageTag }}" ]; then
+            ECR_IMAGE_TAG="${{ github.ref_name }}-${{ github.sha }}"
+          else
+            ECR_IMAGE_TAG="${{ github.event.inputs.ecrImageTag }}"
+          fi
+
+          echo "Using ECR image tag: $ECR_IMAGE_TAG"
+          echo "ECR_IMAGE_TAG=$ECR_IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      # OPTIONAL: Login to Amazon ECR, to check if the image exists
+      # This step is optional and can be removed if you don't need to check for the image existence.
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Set the image tag to use (input parameter or default to branch name + commit SHA)
-      - name: Set ECR Image Tag
-        id: ecr-image-tag-step
-        run: |
-          if [ -z "${{ github.event.inputs.ecrImageTag }}" ]; then
-            IMAGE_TAG="${{ github.ref_name }}-${{ github.sha }}"
-          else
-            IMAGE_TAG="${{ github.event.inputs.ecrImageTag }}"
-          fi
-
-          echo "Using ECR image tag: $IMAGE_TAG"
-          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-
+      # OPTIONAL: docker pull, to check if the image exists
+      # This step is optional and can be removed if you don't need to check for the image existence.
       - name: Check if image exists in ECR
         run: |
-          echo "Checking if image with tag ${{ steps.ecr-image-tag-step.outputs.IMAGE_TAG }} exists in ECR..."
-          docker pull "${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.ecr-image-tag-step.outputs.IMAGE_TAG }}"
+          echo "Checking if image with tag ${{ steps.ecr-image-tag-step.outputs.ECR_IMAGE_TAG }} exists in ECR..."
+          docker pull "${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.ecr-image-tag-step.outputs.ECR_IMAGE_TAG }}"
 
       # Setup Node.js for AWS CDK
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: "22"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
       # Deploy with AWS CDK
-      # - name: Deploy with AWS CDK
-      #   working-directory: ./aws/app-cdk
-      #   run: |
-      #     # Set the image tag to use (input parameter or default to branch name + commit SHA)
-      #     if [ -z "${{ github.event.inputs.ecrImageTag }}" ]; then
-      #       IMAGE_TAG="${{ github.ref_name }}-${{ github.sha }}"
-      #     else
-      #       IMAGE_TAG="${{ github.event.inputs.ecrImageTag }}"
-      #     fi
-          
-      #     echo "Using ECR image tag: $IMAGE_TAG"
-
-      #     npm ci
-      #     npx cdk deploy --all --require-approval never \
-      #       --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
-      #       --parameters EcrRepositoryUri="${{ secrets.AWS_ECR_REPOSITORY_URI }}" \
-      #       --parameters EcrImageTag="$IMAGE_TAG"
-      #   env:
-      #     # environment variables needed for CDK deployment
-      #     CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
-      #     CDK_DEFAULT_REGION: "${{ secrets.AWS_REGION }}"
+      - name: Deploy with AWS CDK
+        working-directory: ./aws/app-cdk
+        run: |
+          ECR_IMAGE_TAG="${{ steps.ecr-image-tag-step.outputs.ECR_IMAGE_TAG }}"
+          npm ci
+          npx cdk deploy --all --require-approval never \
+            --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
+            --parameters EcrRepositoryUri="${{ secrets.AWS_ECR_REPOSITORY_URI }}" \
+            --parameters EcrImageTag="$ECR_IMAGE_TAG"
+        env:
+          # environment variables needed for CDK deployment
+          CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
+          CDK_DEFAULT_REGION: "${{ secrets.AWS_REGION }}"
