@@ -57,11 +57,15 @@ export class AppCdkStack extends cdk.Stack {
       executionRole: taskExecutionRole,
     });
 
-    const ecrRepository = ecr.Repository.fromRepositoryName(
-      this,
-      'EcrRepository',
-      "aaaa-stack"
-    );
+    const ecrRepository = ecr.Repository.fromRepositoryArn(
+        this, "EcrRepository", "arn:aws:ecr:ap-southeast-2:258032939606:repository/aaaa-stack"
+    )
+     
+    // const ecrRepository = ecr.Repository.fromRepositoryName(
+    //   this,
+    //   'EcrRepository',
+    //   "aaaa-stack"
+    // );
 
     const containerImage = ecs.ContainerImage.fromEcrRepository(
       ecrRepository,
