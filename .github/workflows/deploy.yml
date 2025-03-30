@@ -65,24 +65,24 @@ jobs:
           node-version: "22"
 
       # Deploy with AWS CDK
-      - name: Deploy with AWS CDK
-        working-directory: ./aws/app-cdk
-        run: |
-          # Set the image tag to use (input parameter or default to branch name + commit SHA)
-          if [ -z "${{ github.event.inputs.ecrImageTag }}" ]; then
-            IMAGE_TAG="${{ github.ref_name }}-${{ github.sha }}"
-          else
-            IMAGE_TAG="${{ github.event.inputs.ecrImageTag }}"
-          fi
+      # - name: Deploy with AWS CDK
+      #   working-directory: ./aws/app-cdk
+      #   run: |
+      #     # Set the image tag to use (input parameter or default to branch name + commit SHA)
+      #     if [ -z "${{ github.event.inputs.ecrImageTag }}" ]; then
+      #       IMAGE_TAG="${{ github.ref_name }}-${{ github.sha }}"
+      #     else
+      #       IMAGE_TAG="${{ github.event.inputs.ecrImageTag }}"
+      #     fi
           
-          echo "Using ECR image tag: $IMAGE_TAG"
+      #     echo "Using ECR image tag: $IMAGE_TAG"
 
-          npm ci
-          npx cdk deploy --all --require-approval never \
-            --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
-            --parameters EcrRepositoryUri="${{ secrets.AWS_ECR_REPOSITORY_URI }}" \
-            --parameters EcrImageTag="$IMAGE_TAG"
-        env:
-          # environment variables needed for CDK deployment
-          CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
-          CDK_DEFAULT_REGION: "${{ secrets.AWS_REGION }}"
+      #     npm ci
+      #     npx cdk deploy --all --require-approval never \
+      #       --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
+      #       --parameters EcrRepositoryUri="${{ secrets.AWS_ECR_REPOSITORY_URI }}" \
+      #       --parameters EcrImageTag="$IMAGE_TAG"
+      #   env:
+      #     # environment variables needed for CDK deployment
+      #     CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
+      #     CDK_DEFAULT_REGION: "${{ secrets.AWS_REGION }}"
