@@ -58,7 +58,7 @@ jobs:
       - name: Check if image exists in ECR
         run: |
           echo "Checking if image ${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.vars.outputs.IMAGE_TAG }} exists in ECR..."
-          docker pull ${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.vars.outputs.IMAGE_TAG }}
+          docker pull "${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.vars.outputs.IMAGE_TAG }}"
 
       # Setup Node.js for AWS CDK
       # - name: Setup Node.js
