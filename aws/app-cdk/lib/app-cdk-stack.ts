@@ -1,17 +1,30 @@
 import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as ecsp from 'aws-cdk-lib/aws-ecs-patterns';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
+import { Construct } from 'constructs';
 
 export class AppCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Cloudformation Parameters
+    const { ecrRepositoryUri, imageTag, acmCertificateArn } = this.getCnfParameters();
 
+    const taskDefinition = this.createFargateTaskDefinition(ecrRepositoryUri, imageTag);
+
+    // Get the certificate from the ARN parameter if provided
+    let certificate = this.getCertificateByArn(acmCertificateArn);
+
+    new ecsp.ApplicationLoadBalancedFargateService(this, `${id}-web-server`, {
+      taskDefinition,
+      publicLoadBalancer: true,
+      certificate: certificate, // Use the certificate if provided
+      redirectHTTP: certificate !== undefined, // Redirect HTTP to HTTPS if certificate is provided
+    });
+  }
+
+  private getCnfParameters() {
     // ACM Certificate ARN - optional
     const acmCertificateArn = new cdk.CfnParameter(this, 'AcmCertificateArn', {
       type: 'String',
@@ -29,7 +42,7 @@ export class AppCdkStack extends cdk.Stack {
       throw new Error('EcrRepositoryUri parameter is not supplied or is empty');
     }
 
-    // Image Tag - required
+    // ECR Image Tag - required
     const imageTag = new cdk.CfnParameter(this, 'EcrImageTag', {
       type: 'String',
       description: 'Tag of the Docker image to deploy',
@@ -39,6 +52,10 @@ export class AppCdkStack extends cdk.Stack {
       throw new Error('EcrImageTag parameter is not supplied or is empty');
     }
 
+    return { ecrRepositoryUri, imageTag, acmCertificateArn };
+  }
+
+  private createFargateTaskDefinition(ecrRepositoryUri: cdk.CfnParameter, imageTag: cdk.CfnParameter) {
     const taskExecutionRole = new iam.Role(this, 'TaskExecutionRole', {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
@@ -55,6 +72,8 @@ export class AppCdkStack extends cdk.Stack {
       `${ecrRepositoryUri.valueAsString}:${imageTag.valueAsString}`
     );
 
+    this.ensureContainerImageIsValid(containerImage);
+
     taskDefinition.addContainer('AppContainer', {
       image: containerImage,
       environment: {
@@ -67,21 +86,24 @@ export class AppCdkStack extends cdk.Stack {
       ],
     });
 
-    // Get the certificate from the ARN parameter if provided
-    let certificate;
-    if (acmCertificateArn.valueAsString && acmCertificateArn.valueAsString !== '') {
-      certificate = certificatemanager.Certificate.fromCertificateArn(
-        this,
-        'Certificate',
-        acmCertificateArn.valueAsString
-      );
+    return taskDefinition;
+  }
+
+  private ensureContainerImageIsValid(containerImage: ecs.ContainerImage) {
+    if (!containerImage) {
+      throw new Error('Container image is not valid');
+    }
+  }
+
+  private getCertificateByArn(acmCertificateArn: cdk.CfnParameter) {
+    if (!acmCertificateArn.valueAsString) {
+      return undefined;
     }
 
-    new ecsp.ApplicationLoadBalancedFargateService(this, `${id}-web-server`, {
-      taskDefinition,
-      publicLoadBalancer: true,
-      certificate: certificate, // Use the certificate if provided
-      redirectHTTP: certificate !== undefined, // Redirect HTTP to HTTPS if certificate is provided
-    });
+    return certificatemanager.Certificate.fromCertificateArn(
+      this,
+      'Certificate',
+      acmCertificateArn.valueAsString
+    );
   }
 }
