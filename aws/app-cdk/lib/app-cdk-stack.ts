@@ -30,13 +30,13 @@ export class AppCdkStack extends cdk.Stack {
     }
 
     // Image Tag - required
-    const imageTag = new cdk.CfnParameter(this, 'ImageTag', {
+    const imageTag = new cdk.CfnParameter(this, 'EcrImageTag', {
       type: 'String',
       description: 'Tag of the Docker image to deploy',
     });
 
     if (!imageTag.valueAsString || imageTag.valueAsString.trim() === '') {
-      throw new Error('ImageTag parameter is not supplied or is empty');
+      throw new Error('EcrImageTag parameter is not supplied or is empty');
     }
 
     const taskExecutionRole = new iam.Role(this, 'TaskExecutionRole', {
