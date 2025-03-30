@@ -38,6 +38,26 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN_TO_ASSUME }}
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Set the image tag to use (input parameter or default to branch name + commit SHA)
+      - name: Set ECR Image Tag
+        id: ecr-image-tag-step
+        run: |
+          if [ -z "${{ github.event.inputs.ecrImageTag }}" ]; then
+            IMAGE_TAG="${{ github.ref_name }}-${{ github.sha }}"
+          else
+            IMAGE_TAG="${{ github.event.inputs.ecrImageTag }}"
+          fi
+
+          echo "Using ECR image tag: $IMAGE_TAG"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Check if image exists in ECR
+        run: docker image pull ${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.vars.outputs.IMAGE_TAG }}
+
       # Setup Node.js for AWS CDK
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -56,7 +76,7 @@ jobs:
           fi
           
           echo "Using ECR image tag: $IMAGE_TAG"
-          
+
           npm ci
           npx cdk deploy --all --require-approval never \
             --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
