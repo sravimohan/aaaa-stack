@@ -19,14 +19,14 @@ export class AppCdkStack extends cdk.Stack {
       default: '',
     });
 
-    // ECR Repository ARN - required
-    const ecrRepositoryArn = new cdk.CfnParameter(this, 'EcrRepositoryArn', {
+    // ECR Repository URI - required
+    const ecrRepositoryUri = new cdk.CfnParameter(this, 'EcrRepositoryUri', {
       type: 'String',
-      description: 'ARN of the ECR repository to pull the image from',
+      description: 'URI of the ECR repository to pull the image from (without the tag)',
     });
 
-    if (!ecrRepositoryArn.valueAsString || ecrRepositoryArn.valueAsString.trim() === '') {
-      throw new Error('EcrRepositoryArn parameter is not supplied or is empty');
+    if (!ecrRepositoryUri.valueAsString || ecrRepositoryUri.valueAsString.trim() === '') {
+      throw new Error('EcrRepositoryUri parameter is not supplied or is empty');
     }
 
     // Image Tag - required
@@ -43,33 +43,16 @@ export class AppCdkStack extends cdk.Stack {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
 
-    taskExecutionRole.addToPolicy(new iam.PolicyStatement({
-      actions: [
-        "ecr:GetAuthorizationToken",
-        "ecr:BatchGetImage",
-        "ecr:GetDownloadUrlForLayer"
-      ],
-      resources: ["*"], // Replace "*" with specific ECR repository ARN for tighter security
-      effect: iam.Effect.ALLOW
-    }));
+    taskExecutionRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')
+    );
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, 'TaskDef', {
       executionRole: taskExecutionRole,
     });
 
-    const ecrRepository = ecr.Repository.fromRepositoryArn(
-        this, "EcrRepository", "arn:aws:ecr:ap-southeast-2:258032939606:repository/aaaa-stack"
-    )
-     
-    // const ecrRepository = ecr.Repository.fromRepositoryName(
-    //   this,
-    //   'EcrRepository',
-    //   "aaaa-stack"
-    // );
-
-    const containerImage = ecs.ContainerImage.fromEcrRepository(
-      ecrRepository,
-      imageTag.valueAsString
+    const containerImage = ecs.ContainerImage.fromRegistry(
+      `${ecrRepositoryUri.valueAsString}:${imageTag.valueAsString}`
     );
 
     taskDefinition.addContainer('AppContainer', {

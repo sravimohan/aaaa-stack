@@ -55,7 +55,7 @@ jobs:
           npm ci
           cdk deploy --all --require-approval never \
             --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
-            --parameters EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
+            --parameters EcrRepositoryUri="${{ secrets.AWS_ECR_REPOSITORY_URI }}" \
             --parameters ImageTag="${{ github.event.inputs.imageTag }}"
         env:
           # environment variables needed for CDK deployment
