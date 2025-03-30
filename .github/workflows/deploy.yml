@@ -48,11 +48,14 @@ jobs:
       - name: Deploy with AWS CDK
         working-directory: ./aws/app-cdk
         run: |
+          defaultImageTag = "${{ github.ref_name }}-${{github.sha}}"
+          ecrImageTag="${{ github.event.inputs.ecrImageTag || defaultImageTag }}"
+          echo "Using ecrImageTag: $ecrImageTag"
           npm ci
           npm run cdk -- deploy --all --require-approval never \
-            --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
-            --parameters EcrRepositoryUri="${{ secrets.AWS_ECR_REPOSITORY_URI }}" \
-            --parameters EcrImageTag="${{ github.event.inputs.ecrImageTag }}"
+          --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
+          --parameters EcrRepositoryUri="${{ secrets.AWS_ECR_REPOSITORY_URI }}" \
+          --parameters EcrImageTag="$ecrImageTag"
         env:
           # environment variables needed for CDK deployment
           CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
