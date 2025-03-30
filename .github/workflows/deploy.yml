@@ -56,13 +56,15 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Check if image exists in ECR
-        run: docker image pull ${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.vars.outputs.IMAGE_TAG }}
+        run: |
+          echo "Checking if image ${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.vars.outputs.IMAGE_TAG }} exists in ECR..."
+          docker image pull ${{ secrets.AWS_ECR_REPOSITORY_URI }}:${{ steps.vars.outputs.IMAGE_TAG }}
 
       # Setup Node.js for AWS CDK
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: "22"
 
       # Deploy with AWS CDK
       # - name: Deploy with AWS CDK
