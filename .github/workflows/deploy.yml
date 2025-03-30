@@ -48,7 +48,7 @@ jobs:
       - name: Deploy with AWS CDK
         working-directory: ./aws/app-cdk
         run: |
-          defaultImageTag = "${{ github.ref_name }}-${{github.sha}}"
+          defaultImageTag="${{ github.ref_name }}-${{github.sha}}"
           ecrImageTag="${{ github.event.inputs.ecrImageTag || defaultImageTag }}"
           echo "Using ecrImageTag: $ecrImageTag"
           npm ci
