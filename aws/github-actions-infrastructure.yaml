@@ -110,24 +110,22 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: Allow
-                Action:
-                  - ecs:UpdateService
-                  - ecs:DescribeServices
-                  - ecs:RegisterTaskDefinition
-                  - ecs:DescribeTaskDefinition
-                  - ecs:ListTaskDefinitions
-                  - ecs:ListServices
+              - Action: cloudformation:*
+                Effect: Allow
                 Resource: "*"
-              - Effect: Allow
-                Action:
-                  - iam:PassRole
-                Resource: "*"
-                Condition:
-                  StringLike:
-                    iam:PassedToService: ecs-tasks.amazonaws.com
-
+              - Action: iam:PassRole
+                Effect: Allow
+                Resource: arn:aws:iam::*:role/cdk-*
+              - Action: ssm:GetParameter
+                Effect: Allow
+                Resource: arn:aws:ssm:*:*:parameter/cdk-bootstrap/*
+              - Action: s3:*
+                Effect: Allow
+                Resource: arn:aws:s3:::cdk-*
 Outputs:
+  ECRRepositoryArn:
+    Description: "ARN of the ECR Repository"
+    Value: !GetAtt ECRRepository.Arn
   ECRRepositoryUri:
     Description: "URI of the ECR Repository"
     Value: !GetAtt ECRRepository.RepositoryUri
