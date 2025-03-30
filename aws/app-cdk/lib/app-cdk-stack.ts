@@ -39,12 +39,6 @@ export class AppCdkStack extends cdk.Stack {
       throw new Error('ImageTag parameter is not supplied or is empty');
     }
 
-    // ECR Repository URI - required
-    const ecrRepositoryUri = `${process.env.ECR_REPOSITORY_URI}:${imageTag.valueAsString}`;
-    if (!ecrRepositoryUri) {
-      throw new Error('ECR_REPOSITORY_URI environment variable is not defined');
-    }
-
     const taskExecutionRole = new iam.Role(this, 'TaskExecutionRole', {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
@@ -63,11 +57,14 @@ export class AppCdkStack extends cdk.Stack {
       executionRole: taskExecutionRole,
     });
 
+    const ecrRepository = ecr.Repository.fromRepositoryName(
+      this,
+      'EcrRepository',
+      "aaaa-stack"
+    );
+
     const containerImage = ecs.ContainerImage.fromEcrRepository(
-      ecr.Repository.fromRepositoryAttributes(this, 'EcrRepository', {
-        repositoryName: ecrRepositoryArn.valueAsString.split('/').pop() || '',
-        repositoryArn: ecrRepositoryArn.valueAsString,
-      }),
+      ecrRepository,
       imageTag.valueAsString
     );
 

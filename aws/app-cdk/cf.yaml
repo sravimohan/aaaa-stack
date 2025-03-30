@@ -42,8 +42,7 @@ Resources:
               - ecr:BatchGetImage
               - ecr:GetDownloadUrlForLayer
             Effect: Allow
-            Resource:
-              Ref: EcrRepositoryArn
+            Resource: arn:aws:ecr:ap-southeast-2:258032939606:repository/aaaa-stack
         Version: "2012-10-17"
       PolicyName: TaskExecutionRoleDefaultPolicyA84DD1B0
       Roles:
@@ -73,22 +72,9 @@ Resources:
           Image:
             Fn::Join:
               - ""
-              - - Fn::Select:
-                    - 4
-                    - Fn::Split:
-                        - ":"
-                        - Ref: EcrRepositoryArn
-                - .dkr.ecr.
-                - Fn::Select:
-                    - 3
-                    - Fn::Split:
-                        - ":"
-                        - Ref: EcrRepositoryArn
-                - "."
+              - - 258032939606.dkr.ecr.ap-southeast-2.
                 - Ref: AWS::URLSuffix
-                - /
-                - Ref: EcrRepositoryArn
-                - ":"
+                - "/aaaa-stack:"
                 - Ref: ImageTag
           Name: AppContainer
           PortMappings:

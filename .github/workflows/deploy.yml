@@ -3,7 +3,9 @@
 # Required Secrets:
 # - AWS_REGION: AWS region where the ECR repository is located (e.g., us-west-2).
 # - AWS_DEPLOY_ROLE_ARN_TO_ASSUME: The ARN of the IAM role to assume for GitHub Actions.
-# - AWS_ECR_REPOSITORY_URI: The URI of the ECR repository (e.g., 999999999999.dkr.ecr.ap-southeast-2.amazonaws.com/aaaa-stack).
+# - AWS_ACM_CERTIFICATE_ARN: The ARN of the ACM certificate for the load balancer.
+# - AWS_ECR_REPOSITORY_ARN: The ARN of the ECR repository (e.g., 999999999999.dkr.ecr.ap-southeast-2.amazonaws.com/aaaa-stack).
+# - AWS_ACCOUNT_ID: The AWS account ID where the resources are deployed.
 
 name: Deploy
 
@@ -54,7 +56,7 @@ jobs:
           cdk deploy --all --require-approval never \
             --parameters AcmCertificateArn="${{ secrets.AWS_ACM_CERTIFICATE_ARN }}" \
             --parameters EcrRepositoryArn="${{ secrets.AWS_ECR_REPOSITORY_ARN }}" \
-            --parameters ImageTag="${{ github.event.inputs.imageTag || github.sha }}"
+            --parameters ImageTag="${{ github.event.inputs.imageTag }}"
         env:
           # environment variables needed for CDK deployment
           CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
