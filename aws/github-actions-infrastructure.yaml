@@ -31,7 +31,7 @@ Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
     Properties:
-      # The ECR repository name is configured to be the same as the GitHub repository name.
+      # ECR repository name is set as the GitHub repository name.
       RepositoryName: !Ref GitHubRepo
       ImageScanningConfiguration:
         ScanOnPush: true
@@ -47,10 +47,10 @@ Resources:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: "Allow"
+          - Action: "sts:AssumeRoleWithWebIdentity" # Allow GitHub Actions to assume this role
+            Effect: "Allow"
             Principal:
               Federated: !Ref GitHubActionsOIDCProviderArn
-            Action: "sts:AssumeRoleWithWebIdentity"
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:ref:*"
@@ -60,11 +60,11 @@ Resources:
         - PolicyName: "ECRPolicy"
           PolicyDocument:
             Statement:
-              - Action:
+              - Action: # Allow ECR login
                   - ecr:GetAuthorizationToken
                 Effect: "Allow"
                 Resource: "*"
-              - Action:
+              - Action: # Allow ECR image push
                   - ecr:BatchCheckLayerAvailability
                   - ecr:BatchGetImage
                   - ecr:CompleteLayerUpload
@@ -83,7 +83,8 @@ Resources:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Action: sts:AssumeRoleWithWebIdentity
+          - Action: # Allow GitHub Actions to assume this role
+              - sts:AssumeRoleWithWebIdentity
             Effect: Allow
             Principal:
               Federated: !Ref GitHubActionsOIDCProviderArn
@@ -93,33 +94,34 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
       Policies:
-        - PolicyName: ECRPolicy
+        - PolicyName: ECRPolicy # OPTIONAL: Allow ECR login and to check if image exists
           PolicyDocument:
             Statement:
-              - Action: ecr:GetAuthorizationToken
+              - Action: # Allow ECR login
+                  - ecr:GetAuthorizationToken
                 Effect: Allow
                 Resource: "*"
-              - Action:
+              - Action: # Allow ECR image pull
                   - ecr:BatchGetImage
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchCheckLayerAvailability
                 Effect: Allow
                 Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${GitHubRepo}"
 
-        - PolicyName: "ECSDeployPolicy"
+        - PolicyName: "DeployPolicy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Action: cloudformation:*
+              - Action: cloudformation:* # Allow CloudFormation actions
                 Effect: Allow
                 Resource: "*"
-              - Action: iam:PassRole
+              - Action: iam:PassRole # Allow passing roles related to cdk
                 Effect: Allow
                 Resource: arn:aws:iam::*:role/cdk-*
-              - Action: ssm:GetParameter
+              - Action: ssm:GetParameter # Allow SSM parameter access related to cdk
                 Effect: Allow
                 Resource: arn:aws:ssm:*:*:parameter/cdk-bootstrap/*
-              - Action: s3:*
+              - Action: s3:* # Allow S3 actions related to cdk
                 Effect: Allow
                 Resource: arn:aws:s3:::cdk-*
 Outputs:
