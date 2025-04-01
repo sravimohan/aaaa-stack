@@ -82,5 +82,5 @@ jobs:
             --parameters EcrImageTag="$ECR_IMAGE_TAG"
         env:
           # environment variables needed for CDK deployment
-          CDK_DEFAULT_ACCOUNT: "${{ secrets.AWS_ACCOUNT_ID }}"
-          CDK_DEFAULT_REGION: "${{ secrets.AWS_REGION }}"
+          AWS_ACCOUNT_ID: "${{ secrets.AWS_ACCOUNT_ID }}"
+          AWS_REGION: "${{ secrets.AWS_REGION }}"

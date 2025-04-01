@@ -16,6 +16,13 @@ export class AppCdkStack extends cdk.Stack {
     // Get the certificate from the ARN parameter if provided
     let certificate = this.getCertificateByArn(acmCertificateArn);
 
+    // ApplicationLoadBalancedFargateService will create all resources, required for ECS Fargate service.
+    // This includes a VPC, Subnets, and Security Groups.
+    // 
+    // Optionally you can provide existing resources, such as VPC and Security Groups.
+    //
+    // Refer to the documentation for more details:
+    // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecs_patterns.ApplicationLoadBalancedFargateService.html
     new ecsp.ApplicationLoadBalancedFargateService(this, `${id}-web-server`, {
       taskDefinition,
       publicLoadBalancer: true,

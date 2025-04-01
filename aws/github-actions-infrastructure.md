@@ -162,18 +162,18 @@ The CloudFormation template provides the following outputs that can be used in y
 
   - URI of the ECR Repository
   - Used in build workflow in the `Publish Docker Image to Amazon ECR` step
-  - 👉 Add this value to GitHub repository secrets as `AWS_ECR_REPOSITORY_URI`
+  - Add this value to GitHub repository secrets as `AWS_ECR_REPOSITORY_URI` 👈
 
 - GitHubActionsBuildRoleArn
 
   - ARN of the IAM role for GitHub Actions build workflows
   - Used in build workflow in the `aws-actions/configure-aws-credentials` step
-  - 👉 Add this value to GitHub repository secrets as `AWS_BUILD_ROLE_ARN_TO_ASSUME`
+  - Add this value to GitHub repository secrets as `AWS_BUILD_ROLE_ARN_TO_ASSUME` 👈
 
 - GitHubActionsDeployRoleArn
   - ARN of the IAM role for GitHub Actions deployment workflows
   - Used in deployment workflow in the `aws-actions/configure-aws-credentials` step
-  - 👉 Add this value to GitHub repository secrets as `AWS_DEPLOY_ROLE_ARN_TO_ASSUME`
+  - Add this value to GitHub repository secrets as `AWS_DEPLOY_ROLE_ARN_TO_ASSUME` 👈
 
 ### To delete the stack
 
@@ -185,10 +185,12 @@ aws cloudformation delete-stack --stack-name <your stack name>
 
 > ℹ️ You can login into your GitHub account and manually setup the secrets in your UI or you can use the GitHub CLI.
 
+- AWS_ACCOUNT_ID: your AWS Account ID
 - AWS_REGION: your AWS Region e.g., us-west-2
 - AWS_ECR_REPOSITORY_URI: CloudFormation output of `ECRRepositoryUri`
 - AWS_BUILD_ROLE_ARN_TO_ASSUME: Cloudformation output of `GitHubActionsBuildRoleArn`
 - AWS_DEPLOY_ROLE_ARN_TO_ASSUME: Cloudformation output of `GitHubActionsDeployRoleArn`
+- AWS_ACM_CERTIFICATE_ARN: Optional, ARN of your SSL certificate in AWS Certificate Manger (ACM). If provided will be assigned to the Appliation Load Balancer. Leave it blank if not required.
 
 ## 4. Build
 
@@ -196,7 +198,23 @@ You can trigger the GitHub Actions Build Workflow either manually or by pushing 
 
 ## 4. Deploy
 
-You can trigger the GitHub Actions Deploy Workflow either manually or by pushing your commit.
+The application deployment uses [AWS CDK V2](https://docs.aws.amazon.com/cdk/v2/guide/home.html) for defining cloud infrastructure in code and provisioning it through AWS CloudFormation.
+
+This stack uses TypeScript.
+
+### 4.1 CDK Bootstrap
+
+Before deploying your app in an AWS Account, We need to bootstrap the CDK Environment. This only needs to be the the very first time we deploy to an AWS Account.
+
+Refer to [Bootstrap your environment for use with the AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html) for more details and customisation options.
+
+One of the most important aspect of this process is deciding how you want to configure your deploy role and permissions. Refer to [Setting Up Deploy Roles and Permissions](/aaaa-stack/aws/deploy-roles-and-permissions.html) for a more detailed discussion on this topic.
+
+### 4.2 GitHub Workflow
+
+You can trigger the GitHub Actions Deploy Workflow manually either through the GitHub Web or CLI.
+
+Deploy workflow file is located at [https://github.com/sravimohan/aaaa-stack/blob/main/.github/workflows/deploy.yml](https://github.com/sravimohan/aaaa-stack/blob/main/.github/workflows/deploy.yml)
 
 ## Further Reading
 
