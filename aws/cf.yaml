@@ -1,0 +1,1302 @@
+{
+	"Parameters": {
+		"AcmCertificateArn": {
+			"Type": "String",
+			"Default": "",
+			"Description": "ARN of the ACM certificate to use for HTTPS"
+		},
+		"EcrRepositoryUri": {
+			"Type": "String",
+			"Description": "URI of the ECR repository to pull the image from (without the tag)"
+		},
+		"EcrImageTag": {
+			"Type": "String",
+			"Description": "Tag of the Docker image to deploy"
+		},
+		"BootstrapVersion": {
+			"Type": "AWS::SSM::Parameter::Value<String>",
+			"Default": "/cdk-bootstrap/hnb659fds/version",
+			"Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+		}
+	},
+	"Resources": {
+		"TaskExecutionRole250D2532": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Statement": [
+						{
+							"Action": "sts:AssumeRole",
+							"Effect": "Allow",
+							"Principal": {
+								"Service": "ecs-tasks.amazonaws.com"
+							}
+						}
+					],
+					"Version": "2012-10-17"
+				},
+				"ManagedPolicyArns": [
+					{
+						"Fn::Join": [
+							"",
+							[
+								"arn:",
+								{
+									"Ref": "AWS::Partition"
+								},
+								":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+							]
+						]
+					}
+				]
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/TaskExecutionRole/Resource"
+			}
+		},
+		"TaskDefTaskRole1EDB4A67": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Statement": [
+						{
+							"Action": "sts:AssumeRole",
+							"Effect": "Allow",
+							"Principal": {
+								"Service": "ecs-tasks.amazonaws.com"
+							}
+						}
+					],
+					"Version": "2012-10-17"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/TaskDef/TaskRole/Resource"
+			}
+		},
+		"TaskDef54694570": {
+			"Type": "AWS::ECS::TaskDefinition",
+			"Properties": {
+				"ContainerDefinitions": [
+					{
+						"Environment": [
+							{
+								"Name": "ASPNETCORE_HTTP_PORTS",
+								"Value": "8080"
+							}
+						],
+						"Essential": true,
+						"Image": {
+							"Fn::Join": [
+								"",
+								[
+									{
+										"Ref": "EcrRepositoryUri"
+									},
+									":",
+									{
+										"Ref": "EcrImageTag"
+									}
+								]
+							]
+						},
+						"Name": "AppContainer",
+						"PortMappings": [
+							{
+								"ContainerPort": 8080,
+								"Protocol": "tcp"
+							}
+						]
+					}
+				],
+				"Cpu": "256",
+				"ExecutionRoleArn": {
+					"Fn::GetAtt": [
+						"TaskExecutionRole250D2532",
+						"Arn"
+					]
+				},
+				"Family": "aaastackTaskDef36A29D8E",
+				"Memory": "512",
+				"NetworkMode": "awsvpc",
+				"RequiresCompatibilities": [
+					"FARGATE"
+				],
+				"TaskRoleArn": {
+					"Fn::GetAtt": [
+						"TaskDefTaskRole1EDB4A67",
+						"Arn"
+					]
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/TaskDef/Resource"
+			}
+		},
+		"Vpc8378EB38": {
+			"Type": "AWS::EC2::VPC",
+			"Properties": {
+				"CidrBlock": "10.0.0.0/16",
+				"EnableDnsHostnames": true,
+				"EnableDnsSupport": true,
+				"InstanceTenancy": "default",
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc"
+					}
+				]
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/Resource"
+			}
+		},
+		"VpcPublicSubnet1Subnet5C2D37C4": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": "ap-southeast-2a",
+				"CidrBlock": "10.0.0.0/19",
+				"MapPublicIpOnLaunch": true,
+				"Tags": [
+					{
+						"Key": "aws-cdk:subnet-name",
+						"Value": "Public"
+					},
+					{
+						"Key": "aws-cdk:subnet-type",
+						"Value": "Public"
+					},
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/PublicSubnet1"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet1/Subnet"
+			}
+		},
+		"VpcPublicSubnet1RouteTable6C95E38E": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/PublicSubnet1"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet1/RouteTable"
+			}
+		},
+		"VpcPublicSubnet1RouteTableAssociation97140677": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "VpcPublicSubnet1RouteTable6C95E38E"
+				},
+				"SubnetId": {
+					"Ref": "VpcPublicSubnet1Subnet5C2D37C4"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet1/RouteTableAssociation"
+			}
+		},
+		"VpcPublicSubnet1DefaultRoute3DA9E72A": {
+			"Type": "AWS::EC2::Route",
+			"Properties": {
+				"DestinationCidrBlock": "0.0.0.0/0",
+				"GatewayId": {
+					"Ref": "VpcIGWD7BA715C"
+				},
+				"RouteTableId": {
+					"Ref": "VpcPublicSubnet1RouteTable6C95E38E"
+				}
+			},
+			"DependsOn": [
+				"VpcVPCGWBF912B6E"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet1/DefaultRoute"
+			}
+		},
+		"VpcPublicSubnet2Subnet691E08A3": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": "ap-southeast-2b",
+				"CidrBlock": "10.0.32.0/19",
+				"MapPublicIpOnLaunch": true,
+				"Tags": [
+					{
+						"Key": "aws-cdk:subnet-name",
+						"Value": "Public"
+					},
+					{
+						"Key": "aws-cdk:subnet-type",
+						"Value": "Public"
+					},
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/PublicSubnet2"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet2/Subnet"
+			}
+		},
+		"VpcPublicSubnet2RouteTable94F7E489": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/PublicSubnet2"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet2/RouteTable"
+			}
+		},
+		"VpcPublicSubnet2RouteTableAssociationDD5762D8": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "VpcPublicSubnet2RouteTable94F7E489"
+				},
+				"SubnetId": {
+					"Ref": "VpcPublicSubnet2Subnet691E08A3"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet2/RouteTableAssociation"
+			}
+		},
+		"VpcPublicSubnet2DefaultRoute97F91067": {
+			"Type": "AWS::EC2::Route",
+			"Properties": {
+				"DestinationCidrBlock": "0.0.0.0/0",
+				"GatewayId": {
+					"Ref": "VpcIGWD7BA715C"
+				},
+				"RouteTableId": {
+					"Ref": "VpcPublicSubnet2RouteTable94F7E489"
+				}
+			},
+			"DependsOn": [
+				"VpcVPCGWBF912B6E"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet2/DefaultRoute"
+			}
+		},
+		"VpcPublicSubnet3SubnetBE12F0B6": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": "ap-southeast-2c",
+				"CidrBlock": "10.0.64.0/19",
+				"MapPublicIpOnLaunch": true,
+				"Tags": [
+					{
+						"Key": "aws-cdk:subnet-name",
+						"Value": "Public"
+					},
+					{
+						"Key": "aws-cdk:subnet-type",
+						"Value": "Public"
+					},
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/PublicSubnet3"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet3/Subnet"
+			}
+		},
+		"VpcPublicSubnet3RouteTable93458DBB": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/PublicSubnet3"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet3/RouteTable"
+			}
+		},
+		"VpcPublicSubnet3RouteTableAssociation1F1EDF02": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "VpcPublicSubnet3RouteTable93458DBB"
+				},
+				"SubnetId": {
+					"Ref": "VpcPublicSubnet3SubnetBE12F0B6"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet3/RouteTableAssociation"
+			}
+		},
+		"VpcPublicSubnet3DefaultRoute4697774F": {
+			"Type": "AWS::EC2::Route",
+			"Properties": {
+				"DestinationCidrBlock": "0.0.0.0/0",
+				"GatewayId": {
+					"Ref": "VpcIGWD7BA715C"
+				},
+				"RouteTableId": {
+					"Ref": "VpcPublicSubnet3RouteTable93458DBB"
+				}
+			},
+			"DependsOn": [
+				"VpcVPCGWBF912B6E"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/PublicSubnet3/DefaultRoute"
+			}
+		},
+		"VpcIsolatedSubnet1SubnetE48C5737": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": "ap-southeast-2a",
+				"CidrBlock": "10.0.96.0/19",
+				"MapPublicIpOnLaunch": false,
+				"Tags": [
+					{
+						"Key": "aws-cdk:subnet-name",
+						"Value": "Isolated"
+					},
+					{
+						"Key": "aws-cdk:subnet-type",
+						"Value": "Isolated"
+					},
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/IsolatedSubnet1"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet1/Subnet"
+			}
+		},
+		"VpcIsolatedSubnet1RouteTable4771E3E5": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/IsolatedSubnet1"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet1/RouteTable"
+			}
+		},
+		"VpcIsolatedSubnet1RouteTableAssociationD300FCBB": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "VpcIsolatedSubnet1RouteTable4771E3E5"
+				},
+				"SubnetId": {
+					"Ref": "VpcIsolatedSubnet1SubnetE48C5737"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet1/RouteTableAssociation"
+			}
+		},
+		"VpcIsolatedSubnet2Subnet16364B91": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": "ap-southeast-2b",
+				"CidrBlock": "10.0.128.0/19",
+				"MapPublicIpOnLaunch": false,
+				"Tags": [
+					{
+						"Key": "aws-cdk:subnet-name",
+						"Value": "Isolated"
+					},
+					{
+						"Key": "aws-cdk:subnet-type",
+						"Value": "Isolated"
+					},
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/IsolatedSubnet2"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet2/Subnet"
+			}
+		},
+		"VpcIsolatedSubnet2RouteTable1D30AF7D": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/IsolatedSubnet2"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet2/RouteTable"
+			}
+		},
+		"VpcIsolatedSubnet2RouteTableAssociationF7B18CCA": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "VpcIsolatedSubnet2RouteTable1D30AF7D"
+				},
+				"SubnetId": {
+					"Ref": "VpcIsolatedSubnet2Subnet16364B91"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet2/RouteTableAssociation"
+			}
+		},
+		"VpcIsolatedSubnet3Subnet6840A2D4": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": "ap-southeast-2c",
+				"CidrBlock": "10.0.160.0/19",
+				"MapPublicIpOnLaunch": false,
+				"Tags": [
+					{
+						"Key": "aws-cdk:subnet-name",
+						"Value": "Isolated"
+					},
+					{
+						"Key": "aws-cdk:subnet-type",
+						"Value": "Isolated"
+					},
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/IsolatedSubnet3"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet3/Subnet"
+			}
+		},
+		"VpcIsolatedSubnet3RouteTableA34D73CB": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc/IsolatedSubnet3"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet3/RouteTable"
+			}
+		},
+		"VpcIsolatedSubnet3RouteTableAssociation04776B7F": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "VpcIsolatedSubnet3RouteTableA34D73CB"
+				},
+				"SubnetId": {
+					"Ref": "VpcIsolatedSubnet3Subnet6840A2D4"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IsolatedSubnet3/RouteTableAssociation"
+			}
+		},
+		"VpcIGWD7BA715C": {
+			"Type": "AWS::EC2::InternetGateway",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc"
+					}
+				]
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/IGW"
+			}
+		},
+		"VpcVPCGWBF912B6E": {
+			"Type": "AWS::EC2::VPCGatewayAttachment",
+			"Properties": {
+				"InternetGatewayId": {
+					"Ref": "VpcIGWD7BA715C"
+				},
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/VPCGW"
+			}
+		},
+		"VpcRestrictDefaultSecurityGroupCustomResourceC73DA2BE": {
+			"Type": "Custom::VpcRestrictDefaultSG",
+			"Properties": {
+				"ServiceToken": {
+					"Fn::GetAtt": [
+						"CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+						"Arn"
+					]
+				},
+				"DefaultSecurityGroupId": {
+					"Fn::GetAtt": [
+						"Vpc8378EB38",
+						"DefaultSecurityGroup"
+					]
+				},
+				"Account": "258032939606"
+			},
+			"UpdateReplacePolicy": "Delete",
+			"DeletionPolicy": "Delete",
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/RestrictDefaultSecurityGroupCustomResource/Default"
+			}
+		},
+		"VpcEcsEndpointSecurityGroup6B2A7280": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "aaa-stack/Vpc/EcsEndpoint/SecurityGroup",
+				"SecurityGroupEgress": [
+					{
+						"CidrIp": "0.0.0.0/0",
+						"Description": "Allow all outbound traffic by default",
+						"IpProtocol": "-1"
+					}
+				],
+				"SecurityGroupIngress": [
+					{
+						"CidrIp": {
+							"Fn::GetAtt": [
+								"Vpc8378EB38",
+								"CidrBlock"
+							]
+						},
+						"Description": {
+							"Fn::Join": [
+								"",
+								[
+									"from ",
+									{
+										"Fn::GetAtt": [
+											"Vpc8378EB38",
+											"CidrBlock"
+										]
+									},
+									":443"
+								]
+							]
+						},
+						"FromPort": 443,
+						"IpProtocol": "tcp",
+						"ToPort": 443
+					}
+				],
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/EcsEndpoint/SecurityGroup/Resource"
+			}
+		},
+		"VpcEcsEndpoint81699F6A": {
+			"Type": "AWS::EC2::VPCEndpoint",
+			"Properties": {
+				"PrivateDnsEnabled": true,
+				"SecurityGroupIds": [
+					{
+						"Fn::GetAtt": [
+							"VpcEcsEndpointSecurityGroup6B2A7280",
+							"GroupId"
+						]
+					}
+				],
+				"ServiceName": "com.amazonaws.ap-southeast-2.ecs",
+				"SubnetIds": [
+					{
+						"Ref": "VpcIsolatedSubnet1SubnetE48C5737"
+					},
+					{
+						"Ref": "VpcIsolatedSubnet2Subnet16364B91"
+					},
+					{
+						"Ref": "VpcIsolatedSubnet3Subnet6840A2D4"
+					}
+				],
+				"VpcEndpointType": "Interface",
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/EcsEndpoint/Resource"
+			}
+		},
+		"VpcEcrEndpointSecurityGroup13145954": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "aaa-stack/Vpc/EcrEndpoint/SecurityGroup",
+				"SecurityGroupEgress": [
+					{
+						"CidrIp": "0.0.0.0/0",
+						"Description": "Allow all outbound traffic by default",
+						"IpProtocol": "-1"
+					}
+				],
+				"SecurityGroupIngress": [
+					{
+						"CidrIp": {
+							"Fn::GetAtt": [
+								"Vpc8378EB38",
+								"CidrBlock"
+							]
+						},
+						"Description": {
+							"Fn::Join": [
+								"",
+								[
+									"from ",
+									{
+										"Fn::GetAtt": [
+											"Vpc8378EB38",
+											"CidrBlock"
+										]
+									},
+									":443"
+								]
+							]
+						},
+						"FromPort": 443,
+						"IpProtocol": "tcp",
+						"ToPort": 443
+					}
+				],
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/EcrEndpoint/SecurityGroup/Resource"
+			}
+		},
+		"VpcEcrEndpoint0BE46338": {
+			"Type": "AWS::EC2::VPCEndpoint",
+			"Properties": {
+				"PrivateDnsEnabled": true,
+				"SecurityGroupIds": [
+					{
+						"Fn::GetAtt": [
+							"VpcEcrEndpointSecurityGroup13145954",
+							"GroupId"
+						]
+					}
+				],
+				"ServiceName": "com.amazonaws.ap-southeast-2.ecr.api",
+				"SubnetIds": [
+					{
+						"Ref": "VpcIsolatedSubnet1SubnetE48C5737"
+					},
+					{
+						"Ref": "VpcIsolatedSubnet2Subnet16364B91"
+					},
+					{
+						"Ref": "VpcIsolatedSubnet3Subnet6840A2D4"
+					}
+				],
+				"VpcEndpointType": "Interface",
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/EcrEndpoint/Resource"
+			}
+		},
+		"VpcEcrDockerEndpointSecurityGroup5D41A216": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "aaa-stack/Vpc/EcrDockerEndpoint/SecurityGroup",
+				"SecurityGroupEgress": [
+					{
+						"CidrIp": "0.0.0.0/0",
+						"Description": "Allow all outbound traffic by default",
+						"IpProtocol": "-1"
+					}
+				],
+				"SecurityGroupIngress": [
+					{
+						"CidrIp": {
+							"Fn::GetAtt": [
+								"Vpc8378EB38",
+								"CidrBlock"
+							]
+						},
+						"Description": {
+							"Fn::Join": [
+								"",
+								[
+									"from ",
+									{
+										"Fn::GetAtt": [
+											"Vpc8378EB38",
+											"CidrBlock"
+										]
+									},
+									":443"
+								]
+							]
+						},
+						"FromPort": 443,
+						"IpProtocol": "tcp",
+						"ToPort": 443
+					}
+				],
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": "aaa-stack/Vpc"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/EcrDockerEndpoint/SecurityGroup/Resource"
+			}
+		},
+		"VpcEcrDockerEndpoint53ED547B": {
+			"Type": "AWS::EC2::VPCEndpoint",
+			"Properties": {
+				"PrivateDnsEnabled": true,
+				"SecurityGroupIds": [
+					{
+						"Fn::GetAtt": [
+							"VpcEcrDockerEndpointSecurityGroup5D41A216",
+							"GroupId"
+						]
+					}
+				],
+				"ServiceName": "com.amazonaws.ap-southeast-2.ecr.dkr",
+				"SubnetIds": [
+					{
+						"Ref": "VpcIsolatedSubnet1SubnetE48C5737"
+					},
+					{
+						"Ref": "VpcIsolatedSubnet2Subnet16364B91"
+					},
+					{
+						"Ref": "VpcIsolatedSubnet3Subnet6840A2D4"
+					}
+				],
+				"VpcEndpointType": "Interface",
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Vpc/EcrDockerEndpoint/Resource"
+			}
+		},
+		"CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Action": "sts:AssumeRole",
+							"Effect": "Allow",
+							"Principal": {
+								"Service": "lambda.amazonaws.com"
+							}
+						}
+					]
+				},
+				"ManagedPolicyArns": [
+					{
+						"Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+					}
+				],
+				"Policies": [
+					{
+						"PolicyName": "Inline",
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [
+								{
+									"Effect": "Allow",
+									"Action": [
+										"ec2:AuthorizeSecurityGroupIngress",
+										"ec2:AuthorizeSecurityGroupEgress",
+										"ec2:RevokeSecurityGroupIngress",
+										"ec2:RevokeSecurityGroupEgress"
+									],
+									"Resource": [
+										{
+											"Fn::Join": [
+												"",
+												[
+													"arn:aws:ec2:ap-southeast-2:258032939606:security-group/",
+													{
+														"Fn::GetAtt": [
+															"Vpc8378EB38",
+															"DefaultSecurityGroup"
+														]
+													}
+												]
+											]
+										}
+									]
+								}
+							]
+						}
+					}
+				]
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role"
+			}
+		},
+		"CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E": {
+			"Type": "AWS::Lambda::Function",
+			"Properties": {
+				"Code": {
+					"S3Bucket": "cdk-hnb659fds-assets-258032939606-ap-southeast-2",
+					"S3Key": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip"
+				},
+				"Timeout": 900,
+				"MemorySize": 128,
+				"Handler": "__entrypoint__.handler",
+				"Role": {
+					"Fn::GetAtt": [
+						"CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+						"Arn"
+					]
+				},
+				"Runtime": "nodejs20.x",
+				"Description": "Lambda function for removing all inbound/outbound rules from the VPC default security group"
+			},
+			"DependsOn": [
+				"CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler",
+				"aws:asset:path": "asset.7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200",
+				"aws:asset:property": "Code"
+			}
+		},
+		"aaastackwebserverLB2F1D682E": {
+			"Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+			"Properties": {
+				"LoadBalancerAttributes": [
+					{
+						"Key": "deletion_protection.enabled",
+						"Value": "false"
+					}
+				],
+				"Scheme": "internet-facing",
+				"SecurityGroups": [
+					{
+						"Fn::GetAtt": [
+							"aaastackwebserverLBSecurityGroup1BF9968E",
+							"GroupId"
+						]
+					}
+				],
+				"Subnets": [
+					{
+						"Ref": "VpcPublicSubnet1Subnet5C2D37C4"
+					},
+					{
+						"Ref": "VpcPublicSubnet2Subnet691E08A3"
+					},
+					{
+						"Ref": "VpcPublicSubnet3SubnetBE12F0B6"
+					}
+				],
+				"Type": "application"
+			},
+			"DependsOn": [
+				"VpcPublicSubnet1DefaultRoute3DA9E72A",
+				"VpcPublicSubnet1RouteTableAssociation97140677",
+				"VpcPublicSubnet2DefaultRoute97F91067",
+				"VpcPublicSubnet2RouteTableAssociationDD5762D8",
+				"VpcPublicSubnet3DefaultRoute4697774F",
+				"VpcPublicSubnet3RouteTableAssociation1F1EDF02"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/LB/Resource"
+			}
+		},
+		"aaastackwebserverLBSecurityGroup1BF9968E": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "Automatically created Security Group for ELB aaastackaaastackwebserverLB25A77496",
+				"SecurityGroupIngress": [
+					{
+						"CidrIp": "0.0.0.0/0",
+						"Description": "Allow from anyone on port 443",
+						"FromPort": 443,
+						"IpProtocol": "tcp",
+						"ToPort": 443
+					},
+					{
+						"CidrIp": "0.0.0.0/0",
+						"Description": "Allow from anyone on port 80",
+						"FromPort": 80,
+						"IpProtocol": "tcp",
+						"ToPort": 80
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/LB/SecurityGroup/Resource"
+			}
+		},
+		"aaastackwebserverLBSecurityGrouptoaaastackaaastackwebserverServiceSecurityGroupB97BDAB4808094F49660": {
+			"Type": "AWS::EC2::SecurityGroupEgress",
+			"Properties": {
+				"Description": "Load balancer to target",
+				"DestinationSecurityGroupId": {
+					"Fn::GetAtt": [
+						"aaastackwebserverServiceSecurityGroup42975343",
+						"GroupId"
+					]
+				},
+				"FromPort": 8080,
+				"GroupId": {
+					"Fn::GetAtt": [
+						"aaastackwebserverLBSecurityGroup1BF9968E",
+						"GroupId"
+					]
+				},
+				"IpProtocol": "tcp",
+				"ToPort": 8080
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/LB/SecurityGroup/to aaastackaaastackwebserverServiceSecurityGroupB97BDAB4:8080"
+			}
+		},
+		"aaastackwebserverLBPublicListenerA46F248E": {
+			"Type": "AWS::ElasticLoadBalancingV2::Listener",
+			"Properties": {
+				"Certificates": [
+					{
+						"CertificateArn": {
+							"Ref": "AcmCertificateArn"
+						}
+					}
+				],
+				"DefaultActions": [
+					{
+						"TargetGroupArn": {
+							"Ref": "aaastackwebserverLBPublicListenerECSGroupFD1F33BA"
+						},
+						"Type": "forward"
+					}
+				],
+				"LoadBalancerArn": {
+					"Ref": "aaastackwebserverLB2F1D682E"
+				},
+				"Port": 443,
+				"Protocol": "HTTPS"
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/LB/PublicListener/Resource"
+			}
+		},
+		"aaastackwebserverLBPublicListenerECSGroupFD1F33BA": {
+			"Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+			"Properties": {
+				"Port": 80,
+				"Protocol": "HTTP",
+				"TargetGroupAttributes": [
+					{
+						"Key": "stickiness.enabled",
+						"Value": "false"
+					}
+				],
+				"TargetType": "ip",
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/LB/PublicListener/ECSGroup/Resource"
+			}
+		},
+		"aaastackwebserverLBPublicRedirectListener111DD276": {
+			"Type": "AWS::ElasticLoadBalancingV2::Listener",
+			"Properties": {
+				"DefaultActions": [
+					{
+						"RedirectConfig": {
+							"Port": "443",
+							"Protocol": "HTTPS",
+							"StatusCode": "HTTP_301"
+						},
+						"Type": "redirect"
+					}
+				],
+				"LoadBalancerArn": {
+					"Ref": "aaastackwebserverLB2F1D682E"
+				},
+				"Port": 80,
+				"Protocol": "HTTP"
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/LB/PublicRedirectListener/Resource"
+			}
+		},
+		"aaastackwebserverService279E249E": {
+			"Type": "AWS::ECS::Service",
+			"Properties": {
+				"Cluster": {
+					"Ref": "EcsDefaultClusterMnL3mNNYNVpc18E0451A"
+				},
+				"DeploymentConfiguration": {
+					"MaximumPercent": 200,
+					"MinimumHealthyPercent": 50
+				},
+				"EnableECSManagedTags": false,
+				"HealthCheckGracePeriodSeconds": 60,
+				"LaunchType": "FARGATE",
+				"LoadBalancers": [
+					{
+						"ContainerName": "AppContainer",
+						"ContainerPort": 8080,
+						"TargetGroupArn": {
+							"Ref": "aaastackwebserverLBPublicListenerECSGroupFD1F33BA"
+						}
+					}
+				],
+				"NetworkConfiguration": {
+					"AwsvpcConfiguration": {
+						"AssignPublicIp": "DISABLED",
+						"SecurityGroups": [
+							{
+								"Fn::GetAtt": [
+									"aaastackwebserverServiceSecurityGroup42975343",
+									"GroupId"
+								]
+							}
+						],
+						"Subnets": [
+							{
+								"Ref": "VpcIsolatedSubnet1SubnetE48C5737"
+							},
+							{
+								"Ref": "VpcIsolatedSubnet2Subnet16364B91"
+							},
+							{
+								"Ref": "VpcIsolatedSubnet3Subnet6840A2D4"
+							}
+						]
+					}
+				},
+				"TaskDefinition": {
+					"Ref": "TaskDef54694570"
+				}
+			},
+			"DependsOn": [
+				"aaastackwebserverLBPublicListenerECSGroupFD1F33BA",
+				"aaastackwebserverLBPublicListenerA46F248E",
+				"TaskDefTaskRole1EDB4A67"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/Service/Service"
+			}
+		},
+		"aaastackwebserverServiceSecurityGroup42975343": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "aaa-stack/aaa-stack-web-server/Service/SecurityGroup",
+				"SecurityGroupEgress": [
+					{
+						"CidrIp": "0.0.0.0/0",
+						"Description": "Allow all outbound traffic by default",
+						"IpProtocol": "-1"
+					}
+				],
+				"VpcId": {
+					"Ref": "Vpc8378EB38"
+				}
+			},
+			"DependsOn": [
+				"TaskDefTaskRole1EDB4A67"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/Service/SecurityGroup/Resource"
+			}
+		},
+		"aaastackwebserverServiceSecurityGroupfromaaastackaaastackwebserverLBSecurityGroupA0A5CBD580806A795640": {
+			"Type": "AWS::EC2::SecurityGroupIngress",
+			"Properties": {
+				"Description": "Load balancer to target",
+				"FromPort": 8080,
+				"GroupId": {
+					"Fn::GetAtt": [
+						"aaastackwebserverServiceSecurityGroup42975343",
+						"GroupId"
+					]
+				},
+				"IpProtocol": "tcp",
+				"SourceSecurityGroupId": {
+					"Fn::GetAtt": [
+						"aaastackwebserverLBSecurityGroup1BF9968E",
+						"GroupId"
+					]
+				},
+				"ToPort": 8080
+			},
+			"DependsOn": [
+				"TaskDefTaskRole1EDB4A67"
+			],
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/aaa-stack-web-server/Service/SecurityGroup/from aaastackaaastackwebserverLBSecurityGroupA0A5CBD5:8080"
+			}
+		},
+		"EcsDefaultClusterMnL3mNNYNVpc18E0451A": {
+			"Type": "AWS::ECS::Cluster",
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/EcsDefaultClusterMnL3mNNYNVpc/Resource"
+			}
+		},
+		"CDKMetadata": {
+			"Type": "AWS::CDK::Metadata",
+			"Properties": {
+				"Analytics": "v2:deflate64:H4sIAAAAAAAA/3VRwW7bMAz9lt4VbfEOO6dZGxQYMCMuci1omfbY2JQhUg4KI/8+yHHdLFtPIt97JB+pzK6/f7PZHZxk5arjqqXSjoWCO5ptzTkE6FAxGDjJy0jQ2XHvW0xces8GndjxEUIDis8gxx9YE5OS56S5RTwrEGO4wubaAsNAbmq8hG2UNHpb8xymcZkdD71L4CHfmjyWLbkilow61S7R3sfkqLyYveAf2EbEO4J3nxNh8kBDsrL0eGLFwKg7UDzB2zx0zjaq4H53yGomXQ0OD7174Kr3xGoKdDGQvu2Cj/1lrxvgkG8X9S3/0AQU+Qd+4gmf7v7SgyZ/Yjd935KbtvnpobqHFthhdXNabEGUXOuhKicFcTNkdvx/9XT3v/JrHYkiz5r3+Ip/htCgLotepeez2aP4GNIHR1HffaQ1f0LlwQ9UYbgHQbMRQS0UGuIm1fyK2kc9G/YV2lf5MmSZXa/t17tXIVqFyEod2v3l/QNBJTEN7wIAAA=="
+			},
+			"Metadata": {
+				"aws:cdk:path": "aaa-stack/CDKMetadata/Default"
+			}
+		}
+	},
+	"Outputs": {
+		"aaastackwebserverLoadBalancerDNSF572C472": {
+			"Value": {
+				"Fn::GetAtt": [
+					"aaastackwebserverLB2F1D682E",
+					"DNSName"
+				]
+			}
+		},
+		"aaastackwebserverServiceURLBA2D6D01": {
+			"Value": {
+				"Fn::Join": [
+					"",
+					[
+						"https://",
+						{
+							"Fn::GetAtt": [
+								"aaastackwebserverLB2F1D682E",
+								"DNSName"
+							]
+						}
+					]
+				]
+			}
+		}
+	},
+	"Rules": {
+		"CheckBootstrapVersion": {
+			"Assertions": [
+				{
+					"Assert": {
+						"Fn::Not": [
+							{
+								"Fn::Contains": [
+									[
+										"1",
+										"2",
+										"3",
+										"4",
+										"5"
+									],
+									{
+										"Ref": "BootstrapVersion"
+									}
+								]
+							}
+						]
+					},
+					"AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+				}
+			]
+		}
+	}
+}
