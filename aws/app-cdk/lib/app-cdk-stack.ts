@@ -6,32 +6,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import { Construct } from 'constructs';
 
-// Your current setup looks correct with:
-
-// A VPC with proper configuration including:
-
-// Public subnets for your load balancer
-// Private subnets with NAT Gateway access for your tasks
-// NAT Gateway for internet access
-// VPC Endpoints for AWS services to optimize traffic:
-
-// S3 Gateway endpoint for ECR image layers
-// ECR API and Docker endpoints for image pulling
-// ECS endpoint for container management
-// CloudWatch Logs endpoint for logging
-// Proper security group configuration for VPC endpoints
-
-// A Fargate service with:
-
-// Private subnet placement (assignPublicIp: false)
-// Proper container configuration with logging
-// HTTPS support via ACM certificate (when provided)
-// This architecture gives you a good balance of security and functionality:
-
-// Your containers can access the internet through the NAT Gateway
-// AWS service traffic stays within the AWS network via VPC endpoints
-// Your containers are protected from direct internet access
-
 export class AppCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -43,70 +17,8 @@ export class AppCdkStack extends cdk.Stack {
     // Get the certificate from the ARN parameter if provided
     let certificate = this.getCertificateByArn(acmCertificateArn);
 
-    // Create VPC with a NAT Gateway for outbound internet access
-    const vpc = new ec2.Vpc(this, 'Vpc', {
-      natGateways: 1, // Add a NAT Gateway in one availability zone
-      maxAzs: 2,
-      subnetConfiguration: [
-        {
-          name: 'private',
-          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS, // Private subnets with NAT Gateway access
-          cidrMask: 24
-        },
-        {
-          name: 'public',
-          subnetType: ec2.SubnetType.PUBLIC,
-          cidrMask: 24
-        }
-      ]
-    });
-
-    // Create security group for VPC endpoints
-    const vpcEndpointSecurityGroup = new ec2.SecurityGroup(this, 'VpcEndpointSecurityGroup', {
-      vpc,
-      description: 'Security Group for VPC Endpoints',
-      allowAllOutbound: true
-    });
-
-    // Allow HTTPS inbound from the VPC CIDR 
-    vpcEndpointSecurityGroup.addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
-      ec2.Port.tcp(443),
-      'Allow HTTPS from within the VPC'
-    );
-
-    // Add S3 Gateway endpoint - CRITICAL for ECR
-    vpc.addGatewayEndpoint('S3Endpoint', {
-      service: ec2.GatewayVpcEndpointAwsService.S3
-    });
-
-    // Add ECR API endpoint with private DNS enabled
-    vpc.addInterfaceEndpoint('EcrApiEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.ECR,
-      privateDnsEnabled: true,
-      securityGroups: [vpcEndpointSecurityGroup]
-    });
-
-    // Add ECR Docker endpoint with private DNS enabled
-    vpc.addInterfaceEndpoint('EcrDkrEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
-      privateDnsEnabled: true,
-      securityGroups: [vpcEndpointSecurityGroup]
-    });
-
-    // Add ECS endpoint with private DNS enabled
-    vpc.addInterfaceEndpoint('EcsEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.ECS,
-      privateDnsEnabled: true,
-      securityGroups: [vpcEndpointSecurityGroup]
-    });
-
-    // Add CloudWatch Logs endpoint - needed for container logs
-    vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-      privateDnsEnabled: true,
-      securityGroups: [vpcEndpointSecurityGroup]
-    });
+    // Create VPC with all required networking configuration
+    const vpc = this.createNetworkInfrastructure();
 
     // Create the Fargate service
     new ecsp.ApplicationLoadBalancedFargateService(this, `${id}-web-server`, {
@@ -148,6 +60,80 @@ export class AppCdkStack extends cdk.Stack {
     }
 
     return { ecrRepositoryUri, imageTag, acmCertificateArn };
+  }
+
+  private createNetworkInfrastructure(): ec2.Vpc {
+    // VPC with,
+    // Public subnets for your load balancer
+    // Private subnets access for your tasks
+    // OPTIONAL: NAT Gateway for internet access. Required if your tasks need to access the internet (e.g., validating JWT Token with Azure AD)
+    const vpc = new ec2.Vpc(this, 'Vpc', {
+      natGateways: 1, // Add a NAT Gateway in one availability zone
+      maxAzs: 2,
+      subnetConfiguration: [
+        {
+          name: 'private',
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS, // Private subnets with NAT Gateway access
+          cidrMask: 24
+        },
+        {
+          name: 'public',
+          subnetType: ec2.SubnetType.PUBLIC,
+          cidrMask: 24
+        }
+      ]
+    });
+
+    // Create security group for VPC endpoints
+    const vpcEndpointSecurityGroup = new ec2.SecurityGroup(this, 'VpcEndpointSecurityGroup', {
+      vpc,
+      description: 'Security Group for VPC Endpoints',
+      allowAllOutbound: true
+    });
+
+    // VPC Endpoints for AWS services to optimize traffic:
+
+    // Allow HTTPS inbound from the VPC CIDR 
+    vpcEndpointSecurityGroup.addIngressRule(
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
+      ec2.Port.tcp(443),
+      'Allow HTTPS from within the VPC'
+    );
+
+    // S3 Gateway endpoint for ECR image layers    
+    vpc.addGatewayEndpoint('S3Endpoint', {
+      service: ec2.GatewayVpcEndpointAwsService.S3
+    });
+
+    // ECR API and Docker endpoints for image pulling with private DNS enabled
+    vpc.addInterfaceEndpoint('EcrApiEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR,
+      privateDnsEnabled: true,
+      securityGroups: [vpcEndpointSecurityGroup]
+    });
+
+    // Add ECR Docker endpoint with private DNS enabled
+    vpc.addInterfaceEndpoint('EcrDkrEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
+      privateDnsEnabled: true,
+      securityGroups: [vpcEndpointSecurityGroup]
+    });
+
+    // Add ECS endpoint with private DNS enabled
+    vpc.addInterfaceEndpoint('EcsEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.ECS,
+      privateDnsEnabled: true,
+      securityGroups: [vpcEndpointSecurityGroup]
+    });
+
+    // Add CloudWatch Logs endpoint - needed for container logs
+    vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+      privateDnsEnabled: true,
+      securityGroups: [vpcEndpointSecurityGroup]
+    });
+
+    return vpc;
   }
 
   private createFargateTaskDefinition(ecrRepositoryUri: cdk.CfnParameter, imageTag: cdk.CfnParameter) {
