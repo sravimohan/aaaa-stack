@@ -4,31 +4,98 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsp from 'aws-cdk-lib/aws-ecs-patterns';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
+import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { Construct } from 'constructs';
 
 export class AppCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const { ecrRepositoryUri, imageTag, acmCertificateArn } = this.getCnfParameters();
+    const { ecrRepositoryUri, imageTag, acmCertificateArn, customDomainName } = this.getCnfParameters();
 
     const taskDefinition = this.createFargateTaskDefinition(ecrRepositoryUri, imageTag);
 
-    // Get the certificate from the ARN parameter if provided
-    let certificate = this.getCertificateByArn(acmCertificateArn);
+    // Get the certificate from the ARN parameter for the custom domain
+    const certificate = this.getCertificateByArn(acmCertificateArn);
 
     // Create VPC with all required networking configuration
     const vpc = this.createNetworkInfrastructure();
 
-    // Create the Fargate service
-    new ecsp.ApplicationLoadBalancedFargateService(this, `${id}-web-server`, {
+    // Create the Fargate service with ALB
+    const fargateService = new ecsp.ApplicationLoadBalancedFargateService(this, `${id}-web-server`, {
       taskDefinition,
-      publicLoadBalancer: true,
-      certificate: certificate,
-      redirectHTTP: certificate !== undefined,
+      publicLoadBalancer: false, // Disable public access to ALB
       vpc: vpc,
-      assignPublicIp: false // Make sure tasks use private subnets
+      assignPublicIp: false // Ensure tasks use private subnets
     });
+
+    // Create a VPC Link using CfnVpcLink
+    const vpcLinkSecurityGroup = new ec2.SecurityGroup(this, 'VpcLinkSecurityGroup', {
+      vpc,
+      description: 'Security Group for VPC Link',
+      allowAllOutbound: true,
+    });
+
+    vpcLinkSecurityGroup.addIngressRule(
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
+      ec2.Port.tcp(80),
+      'Allow HTTP traffic from within the VPC'
+    );
+
+    const vpcLink = new apigatewayv2.CfnVpcLink(this, 'MyCfnVpcLink', {
+      name: `${id}-vpc-link`,
+      subnetIds: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }).subnetIds,
+      securityGroupIds: [vpcLinkSecurityGroup.securityGroupId],
+    });
+
+    // Create API Gateway HTTP API with default endpoint disabled
+    const api = new apigatewayv2.HttpApi(this, 'HttpApi', {
+      apiName: `${id}-http-api`,
+      disableExecuteApiEndpoint: true, // Disable the default endpoint
+    });
+
+    // Integrate API Gateway with ALB target
+    const albIntegration = new integrations.HttpAlbIntegration('AlbIntegration', fargateService.listener, {
+      vpcLink: apigatewayv2.VpcLink.fromVpcLinkAttributes(this, 'VpcLink', {
+        vpcLinkId: vpcLink.ref,
+        vpc: vpc,
+      }),
+    });
+
+    // Add a proxy route to the API Gateway
+    api.addRoutes({
+      path: '/{proxy+}', // Proxy route to forward all requests
+      methods: [apigatewayv2.HttpMethod.ANY],
+      integration: albIntegration,
+    });
+
+    // Add a custom domain to API Gateway
+    if (customDomainName.valueAsString && certificate) {
+      const domainName = new apigatewayv2.CfnDomainName(this, 'ApiCustomDomain', {
+        domainName: customDomainName.valueAsString, // Ensure this is explicitly passed as a string
+        domainNameConfigurations: [
+          {
+            certificateArn: certificate.certificateArn,
+            endpointType: 'REGIONAL',
+          },
+        ],
+      });
+
+      // Map the custom domain to the API
+      new apigatewayv2.CfnApiMapping(this, 'ApiMapping', {
+        apiId: api.apiId,
+        domainName: domainName.ref,
+        stage: '$default', // Use the default stage
+      });
+    }
+
+    // Restrict ALB security group to allow traffic only from API Gateway
+    fargateService.loadBalancer.connections.securityGroups[0].addIngressRule(
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
+      ec2.Port.tcp(80),
+      'Allow traffic from within the VPC'
+    );
   }
 
   private getCnfParameters() {
@@ -59,7 +126,14 @@ export class AppCdkStack extends cdk.Stack {
       throw new Error('EcrImageTag parameter is not supplied or is empty');
     }
 
-    return { ecrRepositoryUri, imageTag, acmCertificateArn };
+    // Custom Domain Name - optional
+    const customDomainName = new cdk.CfnParameter(this, 'CustomDomainName', {
+      type: 'String',
+      description: 'Custom domain name for the API Gateway',
+      default: '',
+    });
+
+    return { ecrRepositoryUri, imageTag, acmCertificateArn, customDomainName };
   }
 
   private createNetworkInfrastructure(): ec2.Vpc {
