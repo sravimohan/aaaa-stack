@@ -31,23 +31,7 @@ export class AppCdkStack extends cdk.Stack {
     });
 
     // Create a VPC Link using CfnVpcLink
-    const vpcLinkSecurityGroup = new ec2.SecurityGroup(this, 'VpcLinkSecurityGroup', {
-      vpc,
-      description: 'Security Group for VPC Link',
-      allowAllOutbound: true,
-    });
-
-    vpcLinkSecurityGroup.addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
-      ec2.Port.tcp(80),
-      'Allow HTTP traffic from within the VPC'
-    );
-
-    const vpcLink = new apigatewayv2.CfnVpcLink(this, 'MyCfnVpcLink', {
-      name: `${id}-vpc-link`,
-      subnetIds: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }).subnetIds,
-      securityGroupIds: [vpcLinkSecurityGroup.securityGroupId],
-    });
+    const vpcLink = this.createVpcLink(vpc, id);
 
     // Create API Gateway HTTP API with default endpoint disabled
     const api = new apigatewayv2.HttpApi(this, 'HttpApi', {
@@ -82,7 +66,6 @@ export class AppCdkStack extends cdk.Stack {
         ],
       });
 
-      // Map the custom domain to the API
       new apigatewayv2.CfnApiMapping(this, 'ApiMapping', {
         apiId: api.apiId,
         domainName: domainName.ref,
@@ -98,6 +81,28 @@ export class AppCdkStack extends cdk.Stack {
     );
   }
 
+  private createVpcLink(vpc: cdk.aws_ec2.Vpc, id: string) {
+    const vpcLinkSecurityGroup = new ec2.SecurityGroup(this, 'VpcLinkSecurityGroup', {
+      vpc,
+      description: 'Security Group for VPC Link',
+      allowAllOutbound: true,
+    });
+
+    vpcLinkSecurityGroup.addIngressRule(
+      ec2.Peer.ipv4(vpc.vpcCidrBlock),
+      ec2.Port.tcp(80),
+      'Allow HTTP traffic from within the VPC'
+    );
+
+    const vpcLink = new apigatewayv2.CfnVpcLink(this, 'MyCfnVpcLink', {
+      name: `${id}-vpc-link`,
+      subnetIds: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }).subnetIds,
+      securityGroupIds: [vpcLinkSecurityGroup.securityGroupId],
+    });
+
+    return vpcLink;
+  }
+
   private getCnfParameters() {
     // ACM Certificate ARN - optional
     const acmCertificateArn = new cdk.CfnParameter(this, 'AcmCertificateArn', {
@@ -105,6 +110,22 @@ export class AppCdkStack extends cdk.Stack {
       description: 'ARN of the ACM certificate to use for HTTPS',
       default: '',
     });
+
+    // Custom Domain Name - optional
+    const customDomainName = new cdk.CfnParameter(this, 'CustomDomainName', {
+      type: 'String',
+      description: 'Custom domain name for the API Gateway',
+      default: '',
+    });
+
+    // validate if customDomainName is not empty then certificate ARN must be provided and vice versa
+    if (customDomainName.valueAsString && !acmCertificateArn.valueAsString) {
+      throw new Error('If CustomDomainName is provided, AcmCertificateArn must also be provided');
+    }
+
+    if (!customDomainName.valueAsString && acmCertificateArn.valueAsString) {
+      throw new Error('If AcmCertificateArn is provided, CustomDomainName must also be provided');
+    }
 
     // ECR Repository URI - required
     const ecrRepositoryUri = new cdk.CfnParameter(this, 'EcrRepositoryUri', {
@@ -125,13 +146,6 @@ export class AppCdkStack extends cdk.Stack {
     if (!imageTag.valueAsString || imageTag.valueAsString.trim() === '') {
       throw new Error('EcrImageTag parameter is not supplied or is empty');
     }
-
-    // Custom Domain Name - optional
-    const customDomainName = new cdk.CfnParameter(this, 'CustomDomainName', {
-      type: 'String',
-      description: 'Custom domain name for the API Gateway',
-      default: '',
-    });
 
     return { ecrRepositoryUri, imageTag, acmCertificateArn, customDomainName };
   }
@@ -158,6 +172,19 @@ export class AppCdkStack extends cdk.Stack {
       ]
     });
 
+    this.createVpcInterfaceEndpointsForECR(vpc);
+
+    return vpc;
+  }
+
+  // VPC Endpoints for AWS services to optimize traffic:
+  // You can improve the security posture of your VPC by configuring Amazon ECR to use an interface VPC endpoint. 
+  // VPC endpoints are powered by AWS PrivateLink, a technology that enables you to privately access Amazon ECR APIs 
+  // through private IP addresses. AWS PrivateLink restricts all network traffic between your VPC and Amazon ECR to 
+  // the Amazon network. You don't need an internet gateway, a NAT device, or a virtual private gateway.
+  // For more information, see the AWS PrivateLink documentation.
+  // https://docs.aws.amazon.com/AmazonECR/latest/userguide/vpc-endpoints.html
+  private createVpcInterfaceEndpointsForECR(vpc: cdk.aws_ec2.Vpc) {
     // Create security group for VPC endpoints
     const vpcEndpointSecurityGroup = new ec2.SecurityGroup(this, 'VpcEndpointSecurityGroup', {
       vpc,
@@ -165,9 +192,6 @@ export class AppCdkStack extends cdk.Stack {
       allowAllOutbound: true
     });
 
-    // VPC Endpoints for AWS services to optimize traffic:
-
-    // Allow HTTPS inbound from the VPC CIDR 
     vpcEndpointSecurityGroup.addIngressRule(
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcp(443),
@@ -206,8 +230,6 @@ export class AppCdkStack extends cdk.Stack {
       privateDnsEnabled: true,
       securityGroups: [vpcEndpointSecurityGroup]
     });
-
-    return vpc;
   }
 
   private createFargateTaskDefinition(ecrRepositoryUri: cdk.CfnParameter, imageTag: cdk.CfnParameter) {
@@ -227,8 +249,6 @@ export class AppCdkStack extends cdk.Stack {
       `${ecrRepositoryUri.valueAsString}:${imageTag.valueAsString}`
     );
 
-    this.ensureContainerImageIsValid(containerImage);
-
     taskDefinition.addContainer('AppContainer', {
       image: containerImage,
       environment: {
@@ -246,12 +266,6 @@ export class AppCdkStack extends cdk.Stack {
     });
 
     return taskDefinition;
-  }
-
-  private ensureContainerImageIsValid(containerImage: ecs.ContainerImage) {
-    if (!containerImage) {
-      throw new Error('Container image is not valid');
-    }
   }
 
   private getCertificateByArn(acmCertificateArn: cdk.CfnParameter) {
