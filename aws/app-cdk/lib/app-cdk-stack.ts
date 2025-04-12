@@ -25,7 +25,8 @@ export class AppCdkStack extends cdk.Stack {
     // Create the Fargate service with ALB
     const fargateService = new ecsp.ApplicationLoadBalancedFargateService(this, `${id}-web-server`, {
       taskDefinition,
-      publicLoadBalancer: false, // Disable public access to ALB
+      publicLoadBalancer: false, // Load Balancer will not be internet-facing.
+      openListener: false, // Load Balancer, security group will not allow ingress from all IP addresses.
       vpc: vpc,
       assignPublicIp: false // Ensure tasks use private subnets
     });
@@ -73,12 +74,14 @@ export class AppCdkStack extends cdk.Stack {
       });
     }
 
-    // Restrict ALB security group to allow traffic only from API Gateway
-    fargateService.loadBalancer.connections.securityGroups[0].addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
-      ec2.Port.tcp(80),
-      'Allow traffic from within the VPC'
-    );
+    // Restrict ALB security group to allow traffic only from VPC Link
+    if (vpcLink.securityGroupIds && vpcLink.securityGroupIds.length > 0) {
+      fargateService.loadBalancer.connections.securityGroups[0].addIngressRule(
+        ec2.Peer.securityGroupId(vpcLink.securityGroupIds[0]),
+        ec2.Port.tcp(80),
+        'Allow traffic only from VPC Link'
+      );
+    }
   }
 
   private createVpcLink(vpc: cdk.aws_ec2.Vpc, id: string) {
@@ -154,7 +157,12 @@ export class AppCdkStack extends cdk.Stack {
     // VPC with,
     // Public subnets for your load balancer
     // Private subnets access for your tasks
+
     // OPTIONAL: NAT Gateway for internet access. Required if your tasks need to access the internet (e.g., validating JWT Token with Azure AD)
+    // In this sample application, ASP.Net Web Api needs to access Azure AD for JWT Token validation.
+    // If you don't need internet access, you can set natGateways to 0.
+    // By default, the NAT Gateway will allow all traffic to the internet. You can restrict the traffic, by adding SecurityGroups to the NAT Gateway.
+
     const vpc = new ec2.Vpc(this, 'Vpc', {
       natGateways: 1, // Add a NAT Gateway in one availability zone
       maxAzs: 2,
@@ -177,8 +185,8 @@ export class AppCdkStack extends cdk.Stack {
     return vpc;
   }
 
-  // VPC Endpoints for AWS services to optimize traffic:
-  // You can improve the security posture of your VPC by configuring Amazon ECR to use an interface VPC endpoint. 
+  // Configuring Amazon ECR to use an interface VPC endpoint. 
+  // VPC Endpoints for AWS services to optimize traffic by keeping ECS to ECR traffic within the AWS network.
   // VPC endpoints are powered by AWS PrivateLink, a technology that enables you to privately access Amazon ECR APIs 
   // through private IP addresses. AWS PrivateLink restricts all network traffic between your VPC and Amazon ECR to 
   // the Amazon network. You don't need an internet gateway, a NAT device, or a virtual private gateway.
